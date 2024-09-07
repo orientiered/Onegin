@@ -1,18 +1,18 @@
 #include <stdlib.h>
 #include "utils.h"
 void swap(void* a, void* b, size_t len) {
-
+    //checking if a and b are correctly aligned
     if ((((size_t) a) % 8) != (((size_t) b) % 8)) {
         swapByByte(a, b, len);
         return;
     }
-
+    //aligning a and b if possible
     const unsigned blockSize = sizeof(long long);
     const unsigned startOffset = (blockSize - ((size_t) a % 8)) % 8;
     swapByByte(a, b, startOffset);
 
     size_t llSteps = (len-startOffset) / sizeof(long long);
-
+    //swapping every 8 bytes
     long long *lla = (long long*) ((size_t)a + startOffset), *llb = (long long*) ((size_t)b + startOffset);
     long long temp = 0;
 

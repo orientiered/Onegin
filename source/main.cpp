@@ -1,35 +1,66 @@
 #include <stdio.h>
+#include "error.h"
 #include "mystring.h"
 #include "utils.h"
+#include "argvProcessor.h"
 
 const int ROWS_NUMBER = 1024;
 const int LINE_LEN = 512;
 
-int readFromFile(const char* fileName, char *text);
+enum error readFromFile(const char* fileName, char *text);
 void bubbleSort(void *array, int elemSize, int length, int (*cmp)(const void *first, const void *second));
-void printText(int *index, char *text);
-// int strindexcmp(const int firstIdx, const int secondIdx);
+void printText(char *index[], FILE* file);
 int strvoidcmp(const void *firstStr, const void *secondStr);
 
-int main() {
-    char text[ROWS_NUMBER][LINE_LEN] = {};
-    int index[ROWS_NUMBER] = {};
-    for (size_t i = 0; i < ROWS_NUMBER; i++)
-        index[i] = i;
-
-    if (readFromFile("Romeo and Juliet.txt", (char*) text)) {
-        fprintf(stderr, "Can't read from file\n");
-        return 0;
-    }
-    bubbleSort((char*)text, LINE_LEN, ROWS_NUMBER, strvoidcmp);
-
-    printText(index, (char *) text);
+int cmp(const void *firstStr, const void *secondStr) {
+    return stralphacmp(*(const char **)firstStr, *(const char**)secondStr);
 }
 
 
-int readFromFile(const char* fileName, char * text) {
+
+int main(int argc, char *argv[]) {
+    argVal_t flags[argsSize] = {};
+    initFlags(flags);
+    processArgs(flags, argc, argv);
+
+    if (flags[HELP].set) {
+        printHelpMessage();
+        return 0;
+    }
+
+    char text[ROWS_NUMBER][LINE_LEN] = {};
+    char *index[ROWS_NUMBER] = {};
+    for (size_t i = 0; i < ROWS_NUMBER; i++)
+        index[i] = (char*)text + i*LINE_LEN;
+
+
+    const char *fileName = "onegin-utf-8.txt";
+    if (flags[INPUT].set)
+        fileName = flags[INPUT].val._string;
+
+    if (readFromFile(fileName, (char*) text) != GOOD_EXIT) {
+        fprintf(stderr, "Can't read from file\n");
+        return 0;
+    }
+
+    bubbleSort(index, sizeof(int*), ROWS_NUMBER, cmp);
+
+    FILE *outFile = stdout;
+    if (flags[OUTPUT].set)
+        outFile = fopen(flags[OUTPUT].val._string, "w");
+    if (!outFile) {
+        fprintf(stderr, "Can't open output file\n");
+        return 0;
+    }
+    printText(index, outFile);
+    fclose(outFile);
+    return 0;
+}
+
+
+enum error readFromFile(const char* fileName, char * text) {
     FILE *textFile = fopen(fileName, "r");
-    if (textFile == NULL) return 1;
+    if (textFile == NULL) return FAIL;
 
     short correctInput = 1;
     for (size_t lineIndex = 0; lineIndex < ROWS_NUMBER; lineIndex++) {
@@ -43,9 +74,9 @@ int readFromFile(const char* fileName, char * text) {
 
     fclose(textFile);
     if (correctInput)
-        return 0;
+        return GOOD_EXIT;
     else
-        return 1;
+        return BAD_EXIT;
 }
 
 
@@ -67,7 +98,8 @@ int strvoidcmp(const void *firstStr, const void *secondStr) {
     return stralphacmp((const char*) firstStr, (const char*) secondStr);
 }
 
-void printText(int *index, char *text) {
+
+void printText(char *index[], FILE *file) {
     for (size_t rowIndex = 0; rowIndex < ROWS_NUMBER; rowIndex++)
-        printf("%s", text + index[rowIndex]*LINE_LEN);
+        fprintf(file, "%s", index[rowIndex]);
 }
