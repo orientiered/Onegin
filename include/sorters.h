@@ -10,7 +10,7 @@
     @param cmp Pointer to comparator function
 
 */
-void bubbleSort(void *array, int elemSize, int length, int (*cmp)(const void *first, const void *second));
+void bubbleSort(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second));
 
 /*
     @brief Comparator to sort array of strings (char**) using stralphacmp

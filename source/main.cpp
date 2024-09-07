@@ -1,15 +1,17 @@
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
 #include "error.h"
 #include "mystring.h"
 #include "utils.h"
 #include "argvProcessor.h"
 #include "sorters.h"
 
-const int ROWS_NUMBER = 1024;
-const int LINE_LEN = 512;
 
-enum error readFromFile(const char* fileName, char *text);
-void printText(char *index[], FILE* file);
+
+enum error readFromFile(const char* fileName, char ***text, size_t *length);
+void printText(char *index[], size_t length, FILE* file);
 
 
 int main(int argc, char *argv[]) {
@@ -22,22 +24,19 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    char text[ROWS_NUMBER][LINE_LEN] = {};
-    char *index[ROWS_NUMBER] = {};
-    for (size_t i = 0; i < ROWS_NUMBER; i++)
-        index[i] = (char*)text + i*LINE_LEN;
-
-
-    const char *fileName = "onegin-utf-8.txt";
+    const char *fileName = "Romeo and Juliet.txt";
     if (flags[INPUT].set)
         fileName = flags[INPUT].val._string;
 
-    if (readFromFile(fileName, (char*) text) != GOOD_EXIT) {
+    char **textStrings = NULL;
+    size_t stringsCnt = 0;
+    if (readFromFile(fileName, &textStrings, &stringsCnt) != GOOD_EXIT) {
         fprintf(stderr, "Can't read from file\n");
         return 0;
     }
+    char *fullText = textStrings[0];
 
-    bubbleSort(index, sizeof(int*), ROWS_NUMBER, stringArrayCmp);
+    bubbleSort(textStrings, sizeof(char*), stringsCnt, stringArrayCmp);
 
     FILE *outFile = stdout;
     if (flags[OUTPUT].set)
@@ -46,34 +45,57 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Can't open output file\n");
         return 0;
     }
-    printText(index, outFile);
+    printText(textStrings, stringsCnt, outFile);
+
+    free(fullText);
+    free(textStrings);
     fclose(outFile);
     return 0;
 }
 
 
-enum error readFromFile(const char* fileName, char * text) {
+enum error readFromFile(const char* fileName, char ***text, size_t *length) {
     FILE *textFile = fopen(fileName, "r");
     if (textFile == NULL) return FAIL;
 
-    short correctInput = 1;
-    for (size_t lineIndex = 0; lineIndex < ROWS_NUMBER; lineIndex++) {
-        fgets(text + LINE_LEN*lineIndex, LINE_LEN, textFile);
+    struct stat stBuf = {};
+    fstat(fileno(textFile), &stBuf);
+    char *data = (char*) calloc((size_t)stBuf.st_size, 1);
+    if (!data) {
+        fclose(textFile);
+        return BAD_EXIT;
+    }
 
-        if (feof(textFile)) {
-            correctInput = 0;
-            break;
+
+    // fread(data, stBuf.st_size, sizeof(char), textFile);
+    unsigned linesCnt = 0, skippedCR = 0;
+    for (size_t index = 0; (index + skippedCR) < (size_t) stBuf.st_size; index++) {
+        data[index] = fgetc(textFile);
+        if (data[index] == '\n') {
+            if (index > 0 && data[index-1] == '\r')
+                skippedCR++, index--;
+            data[index] = '\0';
+            linesCnt++;
         }
     }
 
+    char **strings = (char**) calloc(linesCnt, sizeof(char *));
+    strings[0] = data;
+    int lastPos = -1;
+    for (size_t index = 0, lineIdx = 0; lineIdx < linesCnt && (index < ((size_t)stBuf.st_size + skippedCR)); index++) {
+        if (data[index] == '\0') {
+            strings[lineIdx] = data + lastPos + 1;
+            lineIdx++;
+            lastPos = index;
+        }
+    }
+    *text = strings;
+    *length = linesCnt;
     fclose(textFile);
-    if (correctInput)
-        return GOOD_EXIT;
-    else
-        return BAD_EXIT;
+    return GOOD_EXIT;
 }
 
-void printText(char *index[], FILE *file) {
-    for (size_t rowIndex = 0; rowIndex < ROWS_NUMBER; rowIndex++)
-        fprintf(file, "%s", index[rowIndex]);
+void printText(char *index[], size_t length, FILE *file) {
+    for (size_t rowIndex = 0; rowIndex < length; rowIndex++)
+        fprintf(file, "%s\n", index[rowIndex]);
 }
