@@ -2,21 +2,20 @@
 #include "mystring.h"
 #include "utils.h"
 
-const int ROWS_NUMBER = 2000;
-const int LINE_LEN = 256;
+const int ROWS_NUMBER = 1024;
+const int LINE_LEN = 512;
 
 int readFromFile(const char* fileName, char * text);
-void bubbleSort(char *text);
+void bubbleSort(char *text, int (*cmp)(const char *first, const char *second));
 void printText(char *text);
 
 int main() {
     char text[ROWS_NUMBER][LINE_LEN] = {};
-    if (readFromFile("onegin.txt", (char*) text)) {
+    if (readFromFile("Romeo and Juliet.txt", (char*) text)) {
         fprintf(stderr, "Can't read from file\n");
         return 0;
     }
-
-    bubbleSort((char*) text);
+    bubbleSort((char*) text, stralphacmp);
 
     printText((char*) text);
 }
@@ -34,7 +33,6 @@ int readFromFile(const char* fileName, char * text) {
             correctInput = 0;
             break;
         }
-
     }
 
     fclose(textFile);
@@ -45,11 +43,11 @@ int readFromFile(const char* fileName, char * text) {
 }
 
 
-void bubbleSort(char *text) {
+void bubbleSort(char *text, int (*cmp)(const char *first, const char *second)) {
     for (int rightBoundary = ROWS_NUMBER; rightBoundary > 0; rightBoundary--) {
         unsigned char swapFlag = 0; //if we didn't swap anything, array is sorted
         for (int i = 0; i < rightBoundary-1; i++) {
-            if (strcmp(text + i*LINE_LEN, text + (i+1)*LINE_LEN) > 0) {
+            if (cmp(text + i*LINE_LEN, text + (i+1)*LINE_LEN) > 0) {
                 swapFlag = 1;
                 swap(text + i*LINE_LEN, text + (i+1)*LINE_LEN, LINE_LEN);
             }

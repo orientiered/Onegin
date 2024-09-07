@@ -7,7 +7,8 @@ char *strncpy(char *s, const char *ct, size_t n);
 char *strcat(char *s, const char *ct);
 char *strncat(char *s, const char *ct, size_t n);
 
-int strcmp(const char *s, const char *t);
+int strcmp(const char *firstStr, const char *secondStr);
+int stralphacmp(const char *firstStr, const char *secondStr);
 int strncmp(const char *s, const char *t, size_t n);
 
 char *strchr(char *s, char c);

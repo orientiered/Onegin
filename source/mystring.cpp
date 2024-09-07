@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "mystring.h"
 //#include <string.h>
 char *strcpy(char *s, const char *ct) {
@@ -31,13 +32,24 @@ char *strncat(char *s, const char *ct, size_t n) {
     return s_copy;
 }
 
-int strcmp(const char *s, const char *t) {
-    for (; *s && (*s == *t); s++, t++);
+int strcmp(const char *firstStr, const char *secondStr) {
+    for (; *firstStr && (*firstStr == *secondStr); firstStr++, secondStr++);
 
-    if (*s != *t)
-        return int(*s) - *t;
+    return int(*firstStr) - int(*secondStr);
+}
 
-    return 0;
+
+int stralphacmp(const char *firstStr, const char *secondStr) {
+    for (;*firstStr && *secondStr; firstStr++, secondStr++) {
+        while (*firstStr  && !isalpha(*firstStr) ) firstStr++;
+        while (*secondStr && !isalpha(*secondStr)) secondStr++;
+        if ((tolower(*firstStr) != tolower(*secondStr)))
+            return tolower(*firstStr) - tolower(*secondStr);
+
+    }
+    while (*firstStr  && !isalpha(*firstStr) ) firstStr++;
+    while (*secondStr && !isalpha(*secondStr)) secondStr++;
+    return tolower(*firstStr) - tolower(*secondStr);
 }
 
 int strncmp(const char *s, const char *t, size_t n) {
