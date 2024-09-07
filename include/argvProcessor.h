@@ -40,6 +40,7 @@ typedef struct argVal {
 enum argNamesEnum {
     INPUT,
     OUTPUT,
+    SORT_ALG,
     HELP
 };
 
@@ -48,6 +49,7 @@ enum argNamesEnum {
 const argDescriptor_t args[] {
     {tSTRING,   "-i",   "--input",    "Next argument is name of input file"},
     {tSTRING,   "-o",   "--output",   "Next argument is name of output file"},
+    {tSTRING,   "-s",   "--sort",     "Next argument is name of sorting algorithm"},
     {tBLANK,    "-h",   "--help",     "Prints help message"}
 };
 

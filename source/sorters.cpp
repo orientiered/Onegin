@@ -16,6 +16,15 @@ void bubbleSort(void *array, size_t elemSize, size_t length, int (*cmp)(const vo
     }
 }
 
+void insertionSort(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second)) {
+    for (size_t index = 1; index < length; index++) {
+        size_t pos = index;
+        while (pos > 0 && cmp((char*)array + elemSize*pos, (char*)array + elemSize*(pos-1)) > 0) {
+            swap((char*)array + elemSize*pos, (char*)array + elemSize*(pos-1), elemSize);
+            pos--;
+        }
+    }
+}
 
 int strvoidcmp(const void *firstStr, const void *secondStr) {
     return stralphacmp((const char*) firstStr, (const char*) secondStr);
