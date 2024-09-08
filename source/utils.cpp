@@ -34,3 +34,30 @@ void swapByByte(void* a, void* b, size_t len) {
         *bc++ = c;
     }
 }
+
+
+void memcpy(void* copyTo, void* copyFrom, size_t length) {
+    //checking if to and from are correctly aligned
+    if (((size_t)copyTo % 8) != ((size_t)copyFrom % 8)) {
+        memcpyByByte(copyTo, copyFrom, length);
+        return;
+    }
+    //aligning to and from if possible
+    const unsigned blockSize = sizeof(long long);
+    const unsigned startOffset = (blockSize - ((size_t) copyTo % 8)) % 8;
+    memcpyByByte(copyTo, copyFrom, startOffset);
+
+    size_t llSteps = (length-startOffset) / sizeof(long long);
+    //copying every 8 bytes
+    long long   *llTo   = (long long*) ((size_t)copyTo    + startOffset),
+                *llFrom = (long long*) ((size_t)copyFrom  + startOffset);
+
+    while (llSteps--) *llTo++ = *llFrom++;
+
+    memcpyByByte(llTo, llFrom, (length-startOffset) % 8);
+}
+
+void memcpyByByte(void *copyTo, void* copyFrom, size_t length) {
+    char *to = (char*)copyTo, *from = (char*)copyFrom;
+    while (length--) *to++ = *from++;
+}

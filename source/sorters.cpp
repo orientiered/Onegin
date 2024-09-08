@@ -18,12 +18,29 @@ void bubbleSort(void *array, size_t elemSize, size_t length, int (*cmp)(const vo
 
 void insertionSort(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second)) {
     for (size_t index = 1; index < length; index++) {
-        size_t pos = index;
-        while (pos > 0 && cmp((char*)array + elemSize*pos, (char*)array + elemSize*(pos-1)) > 0) {
-            swap((char*)array + elemSize*pos, (char*)array + elemSize*(pos-1), elemSize);
-            pos--;
+        char* pos = (char*)array + elemSize*index;
+        while (pos > array && cmp(pos, pos - elemSize) < 0) {
+            swap(pos, pos-elemSize, elemSize);
+            pos -= elemSize;
         }
     }
+}
+
+void insertionSortSwapless(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second)) {
+    void *tempElem = calloc(1, elemSize);
+    for (size_t index = 1; index < length; index++) {
+        char *pos = (char*) array + index*elemSize;
+
+        if (cmp(pos, pos - elemSize) < 0) {
+            memcpy(tempElem, pos, elemSize);
+            do {
+                memcpy(pos, pos - elemSize, elemSize);
+                pos -= elemSize;
+            } while (pos > array && cmp(tempElem, pos-elemSize) < 0);
+            memcpy(pos, tempElem, elemSize);
+        }
+    }
+    free(tempElem);
 }
 
 int strvoidcmp(const void *firstStr, const void *secondStr) {

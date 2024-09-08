@@ -78,21 +78,6 @@ char *strrchr(char *s, char c) {
         return NULL;
 }
 
-// const char *strstr(const char *s, const char *t) {
-//     while (*s) {
-//         while ((*s != *t) && *s)
-//             s++;
-//         const char *sCopy = s;
-//         while ((*s == *t) && *s && *t)
-//             s++, t++;
-//         if (*t == '\0')
-//             return sCopy;
-//         else
-//             t -= s - sCopy;
-//     }
-//     return NULL;
-// }
-
 const char* strstr(const char* text, const char* str) {
     int textSize = (int) strlen(text);
     int strSize =  (int) strlen(str);
@@ -128,15 +113,10 @@ const char* strstr(const char* text, const char* str) {
     return NULL;
 }
 
-char *strtok(char *s, const char *tok) {
-    return NULL;
-}
-
 size_t strlen(const char *s) {
     size_t len = 0;
     while (*s++) len++;
     return len;
 }
-
 
 

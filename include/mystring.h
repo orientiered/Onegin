@@ -16,8 +16,6 @@ char *strrchr(char *s, char c);
 
 const char *strstr(const char *s, const char *t );
 
-char *strtok(char *s, const char *tok);
-
 size_t strlen(const char *s);
 
 #endif

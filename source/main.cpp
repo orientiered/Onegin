@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     }
     char *fullText = textStrings[0]; //this pointer must be freed at the end
 
-    sortFunc_t sortFunc = insertionSort;
+    sortFuncPtr_t sortFunc = insertionSortSwapless;
     if (flags[SORT_ALG].set) {
         if (strcmp("bubble", flags[SORT_ALG].val._string) == 0)
             sortFunc = bubbleSort;
