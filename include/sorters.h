@@ -30,6 +30,10 @@ void insertionSort(void *array, size_t elemSize, size_t length, int (*cmp)(const
 
 void insertionSortSwapless(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second));
 
+void shellSort(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second));
+
+void quickSort(void *array, size_t elemSize, size_t length, int (*cmp)(const void *first, const void *second));
+
 /*
     @brief Comparator to sort array of strings (char**) using stralphacmp
 */

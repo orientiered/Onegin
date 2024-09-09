@@ -1,8 +1,8 @@
 /// @file
 /// @brief Struct and macros for error handling
 
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef ERROR_DEBUG_H
+#define ERROR_DEBUG_H
 
 #include "colors.h"
 

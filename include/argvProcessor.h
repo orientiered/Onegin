@@ -40,6 +40,7 @@ typedef struct argVal {
 enum argNamesEnum {
     INPUT,
     OUTPUT,
+    SORT_TIME,
     SORT_ALG,
     HELP
 };
@@ -47,10 +48,11 @@ enum argNamesEnum {
 
 /// @brief Global array with descriptions of all available arguments
 const argDescriptor_t args[] {
-    {tSTRING,   "-i",   "--input",    "Next argument is name of input file"},
-    {tSTRING,   "-o",   "--output",   "Next argument is name of output file"},
-    {tSTRING,   "-s",   "--sort",     "Next argument is name of sorting algorithm"},
-    {tBLANK,    "-h",   "--help",     "Prints help message"}
+    {tSTRING,   "-i",   "--input",      "Next argument is name of input file"},
+    {tSTRING,   "-o",   "--output",     "Next argument is name of output file"},
+    {tBLANK,    "-t"    "--time",       "Prints time used to sort file"},
+    {tSTRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm"},
+    {tBLANK,    "-h",   "--help",       "Prints help message"}
 };
 
 const size_t argsSize = sizeof(args)/sizeof(argDescriptor_t);

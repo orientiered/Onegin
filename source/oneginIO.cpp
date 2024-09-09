@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "error.h"
+#include "error_debug.h"
 #include "oneginIO.h"
 
 enum error readFromFile(const char* fileName, char ***text, size_t *length) {
@@ -46,7 +46,7 @@ enum error readFromFile(const char* fileName, char ***text, size_t *length) {
     return GOOD_EXIT;
 }
 
-void printText(char *index[], size_t length, FILE *file) {
+void writeStringsToFile(char *index[], size_t length, FILE *file) {
     for (size_t rowIndex = 0; rowIndex < length; rowIndex++)
         fprintf(file, "%s\n", index[rowIndex]);
 }

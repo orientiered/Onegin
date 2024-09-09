@@ -22,6 +22,6 @@ enum error readFromFile(const char* fileName, char ***text, size_t *length);
     @param length   [in] Number of strings to print
     @param file     [in] Stream to print strings
 */
-void printText(char *index[], size_t length, FILE* file);
+void writeStringsToFile(char *index[], size_t length, FILE* file);
 
 #endif

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "error.h"
+#include "error_debug.h"
 #include "argvProcessor.h"
 
 enum error processArgs(argVal_t flags[], int argc, char *argv[]) {
