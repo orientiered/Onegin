@@ -40,12 +40,14 @@ int strcmp(const char *firstStr, const char *secondStr) {
 
 
 int stralphacmp(const char *firstStr, const char *secondStr) {
-    for (;*firstStr && *secondStr; firstStr++, secondStr++) {
-        while (*firstStr  && !isalpha(*firstStr) ) firstStr++;
+    while (*firstStr && *secondStr) {
+        while (*firstStr && !isalpha(*firstStr)) firstStr++;
         while (*secondStr && !isalpha(*secondStr)) secondStr++;
-        if ((tolower(*firstStr) != tolower(*secondStr)))
-            return tolower(*firstStr) - tolower(*secondStr);
 
+        if (tolower(*firstStr) != tolower(*secondStr))
+            return tolower(*firstStr) - tolower(*secondStr);
+        if (*firstStr)  firstStr++;
+        if (*secondStr) secondStr++;
     }
     while (*firstStr  && !isalpha(*firstStr) ) firstStr++;
     while (*secondStr && !isalpha(*secondStr)) secondStr++;

@@ -7,7 +7,8 @@
 //#define DEBUG_PRINTS
 #include "error_debug.h"
 
-#define MAX(a,b) (a < b) ? b : a
+#define MAX(a,b) (((a) < (b)) ? (b) : (a))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 static void insertionSortBase(void *array, size_t elemSize, size_t alignment, size_t length, int (*cmp)(const void *first, const void *second));
 
@@ -79,21 +80,27 @@ void quickSort(void *array, size_t elemSize, size_t length, int (*cmp)(const voi
         return;
     }
 
-    long long mid = (rand() % length);
-    swap(array, (char*) array + elemSize * mid, elemSize);
-    long long left = 0, right = 0; //left and right boundaries of elements equal to array[length/2]
-
-    for (size_t idx = 1; idx < length; idx++) {
-        //printf("idx: %ld\n", idx);
-        int cmpResult = cmp(array, (char*) array + elemSize * idx);
-        if (cmpResult > 0) {
+    swap(array, (char*)array + elemSize * (rand() % length), elemSize); //moving random element to start of the array
+    long long sepLeft = 0, sepRight = 1; //[left;right)
+    long long left = sepRight, right = length - 1; //for all i >= right array[i] > sepElement
+    while (left <= right) {
+        int cmpResult = cmp((char*)array + elemSize * sepLeft, (char*) array + elemSize * left);
+        if (cmpResult < 0) {
+            swap((char*) array + elemSize * left, (char*) array + elemSize * right, elemSize);
+            right--;
+        } else if (cmpResult > 0) {
+            swap((char*) array + elemSize * sepLeft, (char*) array + elemSize * left, elemSize);
+            sepLeft++;
+            sepRight++;
             left++;
-            swap((char*) array + elemSize*left, (char*) array + elemSize*idx, elemSize);
+        } else {
+            sepRight++;
+            left++;
         }
     }
-    swap((char*) array + elemSize * left, array, elemSize);
-    quickSort(array, elemSize, left, cmp);
-    quickSort((char*)array + elemSize * (left+1), elemSize, length-left-1, cmp);
+
+    quickSort(array, elemSize, sepLeft+1, cmp);
+    quickSort((char*) array + elemSize * sepRight, elemSize, length - sepRight, cmp);
 }
 
 

@@ -6,7 +6,7 @@
 #include "oneginIO.h"
 
 enum error readFromFile(const char* fileName, char ***text, size_t *length) {
-    FILE *textFile = fopen(fileName, "r");
+    FILE *textFile = fopen(fileName, "rb");
     if (textFile == NULL) return FAIL;
 
     struct stat stBuf = {};

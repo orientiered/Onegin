@@ -9,6 +9,14 @@
 #include "oneginIO.h"
 
 
+int check(char **array, size_t length, int (*cmp)(const void *a, const void *b)) {
+    printf("Checking array\n");
+    for (size_t i = 0; i < length-1; i++)
+        if (cmp(array + i, array + i + 1) > 0) return 1;
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     argVal_t flags[argsSize] = {};
     initFlags(flags);
@@ -51,11 +59,14 @@ int main(int argc, char *argv[]) {
     clock_t startTime = clock();
     sortFunc(textStrings, sizeof(char*), stringsCnt, stringArrayCmp);
     clock_t endTime = clock();
+    if (check(textStrings, stringsCnt, stringArrayCmp))
+        printf("Sort doesn't work\n");
+
     if (flags[SORT_TIME].set)
         printf("Sorting took %ld ms\n", (endTime-startTime)*1000/CLOCKS_PER_SEC);
     FILE *outFile = stdout;
     if (flags[OUTPUT].set)
-        outFile = fopen(flags[OUTPUT].val._string, "w");
+        outFile = fopen(flags[OUTPUT].val._string, "wb");
     if (!outFile) {
         fprintf(stderr, "Can't open output file\n");
         return 0;

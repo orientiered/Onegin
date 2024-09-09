@@ -69,6 +69,16 @@
 #define DBG_PRINTF(...)
 #endif
 
+#ifdef DEBUG_PRINTS
+#define DBG_STR(str, size)                                      \
+    do {                                                        \
+        for (int i = 0;str[i] && i < size; i++) {               \
+            printf("%c(%d)", str[i], (unsigned char)str[i]);    \
+        }                                                       \
+    } while (0)
+#else
+#define DBG_STR(str, size)
+#endif
 /// @brief Error codes which can be used in many functions
 enum error {
     GOOD_EXIT = 0,      ///< Function worked correctly and all is as expected
