@@ -9,10 +9,13 @@
 #include "oneginIO.h"
 
 
-int check(char **array, size_t length, int (*cmp)(const void *a, const void *b)) {
+int checkIsSorted(char **array, size_t length, int (*cmp)(const void *a, const void *b)) {
     printf("Checking array\n");
     for (size_t i = 0; i < length-1; i++)
-        if (cmp(array + i, array + i + 1) > 0) return 1;
+        if (cmp(array + i, array + i + 1) > 0) {
+            DBG_PRINTF("%s\n%s\n", *(array + i), *(array + i + 1));
+            return 1;
+        }
 
     return 0;
 }
@@ -59,7 +62,7 @@ int main(int argc, char *argv[]) {
     clock_t startTime = clock();
     sortFunc(textStrings, sizeof(char*), stringsCnt, stringArrayCmp);
     clock_t endTime = clock();
-    if (check(textStrings, stringsCnt, stringArrayCmp))
+    if (checkIsSorted(textStrings, stringsCnt, stringArrayCmp))
         printf("Sort doesn't work\n");
 
     if (flags[SORT_TIME].set)

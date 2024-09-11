@@ -81,7 +81,7 @@ void quickSort(void *array, size_t elemSize, size_t length, int (*cmp)(const voi
     }
 
     swap(array, (char*)array + elemSize * (rand() % length), elemSize); //moving random element to start of the array
-    long long sepLeft = 0, sepRight = 1; //[left;right)
+    long long sepLeft = 0, sepRight = 1; //[left;right) - block with equal elements
     long long left = sepRight, right = length - 1; //for all i >= right array[i] > sepElement
     while (left <= right) {
         int cmpResult = cmp((char*)array + elemSize * sepLeft, (char*) array + elemSize * left);
