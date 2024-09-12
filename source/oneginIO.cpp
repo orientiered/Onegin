@@ -14,9 +14,7 @@ enum error readTextFromFile(const char* fileName, text_t *textInfo) {
     if (!textFile) return FAIL;
 
     char *data = (char*) calloc(textInfo->dataLen + 1, 1);
-    //data \0
     textInfo->data = data;
-
     DBG_PRINTF("Data pointer: %p\n", data);
     if (!data) {
         fclose(textFile);
@@ -25,12 +23,10 @@ enum error readTextFromFile(const char* fileName, text_t *textInfo) {
 
     textInfo->dataLen = fread(data, sizeof(char), textInfo->dataLen, textFile);
     DBG_PRINTF("File size after fread: %lu\n", textInfo->dataLen);
-
     data[textInfo->dataLen] = '\0'; //zeroing symbol after text to ensure safety
 
     splitString(textInfo); //removing '\r' and replacing '\n' by '\0'; updates textLen and dataLen
-
-    splittedStringToArray(textInfo);
+    splittedStringToArray(textInfo); //making array with pointers to start of the string
 
     fclose(textFile);
     return GOOD_EXIT;
@@ -62,13 +58,11 @@ void splitString(text_t *textInfo) {
     }
     *writePtr = '\0';
     textInfo->dataLen = (size_t)writePtr - (size_t)textInfo->data;
-
     DBG_PRINTF("File size after removing \\r: %lu\n", textInfo->dataLen);
 
     //checking if last string is empty; we don't count it
     if (*readPtr == 0 && readPtr != textInfo->data && *(readPtr - 1) != '\0')
         linesCnt++;
-
     textInfo->textLen = linesCnt;
     DBG_PRINTF("Lines count: %lu\n", textInfo->textLen);
 
@@ -98,7 +92,7 @@ void splittedStringToArray(text_t *textInfo) {
 
 size_t getFileSize(const char *fileName) {
     struct stat stBuf = {};
-    if (stat(fileName, &stBuf) == -1) {
+    if (!fileName || stat(fileName, &stBuf) == -1) {
         printf("Can't read file %s\n", fileName);
         return 0;
     }

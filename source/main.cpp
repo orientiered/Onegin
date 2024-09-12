@@ -52,11 +52,11 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     }
 
     if (flags[SORT_TIME].set) {
-        doublePair_t averageTime = sortTimeTest(15, onegin, sortFunc, stringArrayCmp);
+        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, stringArrayCmp);
         if (averageTime.first > 40000) //>40ms
-            printf("Average sorting time is %g+-%g ms\n", averageTime.first / 1000, averageTime.second / 1000);
+            printf("Average sorting time is %.1f+-%.1f ms\n", averageTime.first / 1000, averageTime.second / 1000);
         else
-            printf("Average sorting time is %g+-%g mcs\n", averageTime.first, averageTime.second);
+            printf("Average sorting time is %.3f+-%.3f ms\n", averageTime.first / 1000, averageTime.second / 1000);
     }
 
     sortFunc(onegin.text, sizeof(char*), onegin.textLen, stringArrayCmp);
@@ -97,31 +97,43 @@ int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
 doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
     clock_t startTime = 0, endTime = 0;
     clock_t totalTime = 0;
-    runningSTD(0, 1); //reseting runningSTD
+    char **textCopy = (char**) calloc(onegin.textLen, sizeof(char*));
+    memcpy(textCopy, onegin.text, onegin.textLen * sizeof(char*));
+
+    runningSTD(0, -1); //reseting runningSTD
     printf("Testing:\n");
     for (unsigned test = 0; test < testNumber; test++) {
-        percentageBar(test, testNumber, 12, totalTime);
+        percentageBar(test, testNumber, 15, totalTime);
         startTime = clock();
         sortFunc(onegin.text, sizeof(char*), onegin.textLen, cmp);
         endTime = clock();
         runningSTD(endTime - startTime, 0);
-        quickSort(onegin.text, sizeof(char*), onegin.textLen, ullCmp);
-        percentageBar(test+1, testNumber, 12, totalTime);
+        DBG_PRINTF(">>sortTime %3.3f\n", double(endTime - startTime) / CLOCKS_PER_SEC * 1000);
+        memcpy(onegin.text, textCopy, onegin.textLen * sizeof(char*));
         totalTime += clock() - startTime;
+        percentageBar(test+1, testNumber, 15, totalTime);
     }
-    printf("\n");
     //returning average time in microseconds
     doublePair_t result = runningSTD(0, 1);
     result.first  *= 1000.0*1000/CLOCKS_PER_SEC;
     result.second *= 1000.0*1000/CLOCKS_PER_SEC;
+    free(textCopy);
+
+    printf("\n\n");
+    printf("Testing took %3.2f s\n", double(totalTime) / CLOCKS_PER_SEC);
     return result;
 }
 
 void percentageBar(unsigned value, unsigned maxValue, unsigned points, long long timePassed) {
+    //draw nice progress bar like
+    //[###|-----] 20.0% Remaining time: 20.4 s
     printf("\r[");
     for (unsigned i = 0; i < points; i++) {
-        if (double(value) / maxValue > double(i) / points)
+        double pointFill = double(value) / maxValue - double(i) / points;
+        if (pointFill > 0)
             printf("#");
+        else if (pointFill > -0.5 / points)
+            printf("|");
         else
             printf("-");
     }
@@ -133,6 +145,7 @@ void percentageBar(unsigned value, unsigned maxValue, unsigned points, long long
 }
 
 void checkNULLStrings(text_t text) {
+    //debug function to detect broken text
     for (size_t i = 0; i < text.textLen; i++) {
         if (!text.text[i]) {
             fprintf(stderr, "NULL STRING: %lu index, len %lu\n", i, text.textLen);

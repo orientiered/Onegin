@@ -10,6 +10,7 @@ long long maxINT(long long a, long long b) {
 long long minINT(long long a, long long b) {
     return (a > b) ? b : a;
 }
+
 void swap(void* a, void* b, size_t len) {
     //checking if a and b are correctly aligned
     if ((((size_t) a) % 8) != (((size_t) b) % 8)) { //TODO: sizeof(long long/uint64_t)
@@ -73,23 +74,29 @@ void memcpyByByte(void *copyTo, void* copyFrom, size_t length) {
 }
 
 doublePair_t runningSTD(double value, int getResult) {
+    //function to calculate standard deviation of some value
+    //constructed to make calculations online, so static variables
     static doublePair_t result = {};
-    static unsigned measureCnt = 0;
-    static double totalValue = 0;
-    static double totalSqrValue = 0;
-    if (getResult) {
+    static unsigned measureCnt = 0;     //number of values
+    static double totalValue = 0;       //sum of value
+    static double totalSqrValue = 0;    //sum of value^2
+    // getResult > 1 --> calculate meanValue and std and return it
+    // getResult = 0 --> store current value
+    // getResult < 0 --> reset stored values
+    if (getResult > 0) {
         if (measureCnt > 1) {
             result.first = totalValue / measureCnt;
             //printf("%g %g %u\n", totalSqrValue, totalValue, measureCnt);
-            result.second = sqrt(totalSqrValue / measureCnt - totalValue*totalValue / measureCnt/ measureCnt) / sqrt(measureCnt - 1);
+            result.second = sqrt(totalSqrValue / measureCnt - result.first*result.first) / sqrt(measureCnt - 1);
         }
-        measureCnt = 0;
-        totalValue = totalSqrValue = 0;
         return result;
-    } else {
+    } else if (getResult == 0) {
         measureCnt++;
         totalValue += value;
         totalSqrValue += value*value;
+    } else {
+        measureCnt = 0;
+        totalValue = totalSqrValue = 0;
     }
     return result;
 }

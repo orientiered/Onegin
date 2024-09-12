@@ -32,7 +32,8 @@ void shellSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
     for (short stepIndex = stepsSize-1; stepIndex >= 0; stepIndex--) {
         if (steps[stepIndex] > length) continue;
         for (size_t offset = 0; offset < steps[stepIndex]; offset++)
-            insertionSortBase((char*)array + elemSize * offset, elemSize, elemSize*steps[stepIndex], (length-offset) / steps[stepIndex], cmp);
+            insertionSortBase((char*)array + elemSize * offset, elemSize,
+                              elemSize*steps[stepIndex], (length-offset) / steps[stepIndex], cmp);
     }
 }
 
@@ -78,8 +79,8 @@ void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
             swap(array, (char*) array + elemSize, elemSize);
         return;
     }
-    //TODO: sepElem = mean(start, mean, end)
-    char *pivot = (char*) array + elemSize*(abs(rand()) % length);
+
+    char *pivot = (char*) array + elemSize * (length / 2);
     llPair_t sep = quickSortPartition(array, elemSize, length, pivot, cmp);
 
     quickSort(array, elemSize, sep.first+1, cmp);
@@ -90,8 +91,9 @@ static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, 
     swap(array, pivot, elemSize); //moving random element to start of the array
     long long sepLeft = 0, sepRight = 1; //[left;right) - block with equal elements
     long long left = sepRight, right = length - 1; //for all i >= right array[i] > sepElement
+    int cmpResult = 0;
     while (left <= right) {
-        int cmpResult = cmp((char*)array + elemSize * sepLeft, (char*) array + elemSize * left);
+        cmpResult = cmp((char*)array + elemSize * sepLeft, (char*) array + elemSize * left);
         if (cmpResult < 0) {
             swap((char*) array + elemSize * left, (char*) array + elemSize * right, elemSize);
             right--;
@@ -110,10 +112,7 @@ static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, 
 }
 
 int ullCmp(const void* first, const void* second) {
-    unsigned long long  stFirst  = *(unsigned long long*) first,
-                        stSecond = *(unsigned long long*) second;
-
-    return stFirst - stSecond;
+    return *(unsigned long long*) first - *(unsigned long long*) second;
 }
 
 int strvoidcmp(const void *firstStr, const void *secondStr) {
@@ -134,11 +133,9 @@ int stringArrayCmpBackward(const void *firstStr, const void *secondStr) {
 sortFuncPtr_t chooseSortFunction(const char *sortName) {
     //choose sort function based on it's name
     const sortFuncPtr_t sortFunctions[] = {
-        bubbleSort, insertionSort, shellSort, quickSort
-    };
+        bubbleSort, insertionSort, shellSort, quickSort};
     const char *sortNames[] = {
-        "bubble",   "insertion",   "shell",   "qsort"
-    };
+        "bubble",   "insertion",   "shell",   "qsort"};
     const unsigned sortFunctionsLen = sizeof(sortFunctions)/sizeof(sortFuncPtr_t);
     const unsigned defaultSortIndex = 3; //qsort
 
