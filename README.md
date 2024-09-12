@@ -2,6 +2,10 @@
 
 Sorts lines in given file in ascending order
 
+Then sorts lines starting from their end
+
+Then prints original text
+
 Ignores all symbols except alphabet, also doesn't distinguish uppercase and lowercase
 
 ## Usage
@@ -16,9 +20,10 @@ Available flags:
 2. `-o (--output)` - next argument must be name of output file
     + By default `stdout`
 3. `-s (--sort)` - next argument must be name of sort algorithm
-    + By default insertion sort (`insertion`), you can also use bubble sort(`bubble`)
-
+    + By default quick sort (`qsort`)
+    + You can also use bubble (`bubble`), insertion (`insertion`) and shell (`shell`) sorts
+4. `-t (--time)` - runs sorting algorithm 15 times (hardcoded) and prints average time
 Example:
 ```
-./main --sort bubble -io onegin.txt out.txt
+./main --sort bubble -tio onegin.txt out.txt
 ```
