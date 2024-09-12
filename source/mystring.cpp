@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "utils.h"
 #include "mystring.h"
 //#include <string.h>
 char *strcpy(char *s, const char *ct) {
     char *s_copy = s;
-    while ((*s++=*ct++) != '\0');
+    while ((*s++=*ct++) != '\0')
+        ;
     return s_copy;
 }
 
@@ -20,7 +22,8 @@ char *strncpy(char *s, const char *ct, size_t n) {
 char *strcat(char *s, const char *ct) {
     char *s_copy = s;
     while (*s) s++;
-    while ((*s++ = *ct++) != '\0');
+    while ((*s++ = *ct++) != '\0')
+        ;
     return s_copy;
 }
 
@@ -41,17 +44,46 @@ int strcmp(const char *firstStr, const char *secondStr) {
 
 int stralphacmp(const char *firstStr, const char *secondStr) {
     while (*firstStr && *secondStr) {
-        while (*firstStr && !isalpha(*firstStr)) firstStr++;
-        while (*secondStr && !isalpha(*secondStr)) secondStr++;
+        firstStr = findAlphabetChar(firstStr);
+        secondStr = findAlphabetChar(secondStr);
 
         if (tolower(*firstStr) != tolower(*secondStr))
             return tolower(*firstStr) - tolower(*secondStr);
         if (*firstStr)  firstStr++;
         if (*secondStr) secondStr++;
     }
-    while (*firstStr  && !isalpha(*firstStr) ) firstStr++;
-    while (*secondStr && !isalpha(*secondStr)) secondStr++;
+    firstStr = findAlphabetChar(firstStr);
+    secondStr = findAlphabetChar(secondStr);
     return tolower(*firstStr) - tolower(*secondStr);
+}
+
+int stralphacmpBackward(const char *firstStr, const char *secondStr) {
+    const char *firstStart = firstStr, *secondStart = secondStr;
+    firstStr  += maxINT((long long)strlen(firstStr)  - 1, 0);
+    secondStr += maxINT((long long)strlen(secondStr) - 1, 0);
+
+    while (firstStr > firstStart && secondStr > secondStart) {
+        firstStr = findAlphabetCharBackward(firstStr, firstStart);
+        secondStr = findAlphabetCharBackward(secondStr, secondStart);
+        if (tolower(*firstStr) != tolower(*secondStr))
+            return tolower(*firstStr) - tolower(*secondStr);
+        if (firstStr > firstStart) firstStr--;
+        if (secondStr > secondStart) secondStr--;
+    }
+    firstStr = findAlphabetCharBackward(firstStr, firstStart);
+    secondStr = findAlphabetCharBackward(secondStr, secondStart);
+    return tolower(*firstStr) - tolower(*secondStr);
+}
+
+
+const char *findAlphabetChar(const char *str) {
+    while (*str && !isalpha(*str)) str++;
+    return str;
+}
+
+const char *findAlphabetCharBackward(const char *str, const char *end) {
+    while (str > end && !isalpha(*str)) str--;
+    return str;
 }
 
 int strncmp(const char *s, const char *t, size_t n) {

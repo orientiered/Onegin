@@ -1,13 +1,23 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "utils.h"
+
+long long maxINT(long long a, long long b) {
+    return (a > b) ? a : b;
+}
+
+long long minINT(long long a, long long b) {
+    return (a > b) ? b : a;
+}
 void swap(void* a, void* b, size_t len) {
     //checking if a and b are correctly aligned
-    if ((((size_t) a) % 8) != (((size_t) b) % 8)) {
+    if ((((size_t) a) % 8) != (((size_t) b) % 8)) { //TODO: sizeof(long long/uint64_t)
         swapByByte(a, b, len);
         return;
     }
     //aligning a and b if possible
-    const unsigned blockSize = sizeof(long long);
+    const unsigned blockSize = sizeof(long long); //TODO:uint64_t instead of long long
     const unsigned startOffset = (blockSize - ((size_t) a % 8)) % 8;
     swapByByte(a, b, startOffset);
 
@@ -60,4 +70,26 @@ void memcpy(void* copyTo, void* copyFrom, size_t length) {
 void memcpyByByte(void *copyTo, void* copyFrom, size_t length) {
     char *to = (char*)copyTo, *from = (char*)copyFrom;
     while (length--) *to++ = *from++;
+}
+
+doublePair_t runningSTD(double value, int getResult) {
+    static doublePair_t result = {};
+    static unsigned measureCnt = 0;
+    static double totalValue = 0;
+    static double totalSqrValue = 0;
+    if (getResult) {
+        if (measureCnt > 1) {
+            result.first = totalValue / measureCnt;
+            //printf("%g %g %u\n", totalSqrValue, totalValue, measureCnt);
+            result.second = sqrt(totalSqrValue / measureCnt - totalValue*totalValue / measureCnt/ measureCnt) / sqrt(measureCnt - 1);
+        }
+        measureCnt = 0;
+        totalValue = totalSqrValue = 0;
+        return result;
+    } else {
+        measureCnt++;
+        totalValue += value;
+        totalSqrValue += value*value;
+    }
+    return result;
 }

@@ -8,20 +8,24 @@
     @brief Reads strings from file
 
     @param fileName [in] Name of file
-    @param text     [out] Array of strings
-    @param length   [out] Number of read strings
 
     @return BAD_EXIT or FAIL if something went wrong, GOOD_EXIT otherwise
 */
-enum error readFromFile(const char* fileName, char ***text, size_t *length);
+enum error readTextFromFile(const char* fileName, text_t *textInfo);
 
 /*!
     @brief Prints strings from array of strings
 
-    @param index    [in] Array of strings
-    @param length   [in] Number of strings to print
     @param file     [in] Stream to print strings
 */
-void writeStringsToFile(char *index[], size_t length, FILE* file);
+void writeTextToFile(text_t textInfo, FILE *file);
+
+size_t getFileSize(const char *fileName);
+
+void splittedStringToArray(text_t *textInfo);
+
+void splitString(text_t *textInfo);
+
+
 
 #endif
