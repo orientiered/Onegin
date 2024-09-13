@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 //#define DEBUG_PRINTS
 #include "error_debug.h"
 #include "mystring.h"
@@ -13,8 +14,9 @@
 
 void checkNULLStrings(text_t text);
 int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp);
-doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp);
+doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread);
 void percentageBar(unsigned value, unsigned maxValue, unsigned points, long long timePassed);
+void *plotGraph(void *arg);
 
 int main(int argc, char *argv[]) { //TODO: const char *argv[]
     argVal_t flags[argsSize] = {};
@@ -51,8 +53,9 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
         sortFunc = chooseSortFunction(flags[SORT_ALG].val._string);
     }
 
+    pthread_t plotThread = 0;
     if (flags[SORT_TIME].set) {
-        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, stringArrayCmp);
+        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, stringArrayCmp, &plotThread);
         if (averageTime.first > 40000) //>40ms
             printf("Average sorting time is %.1f+-%.1f ms\n", averageTime.first / 1000, averageTime.second / 1000);
         else
@@ -79,6 +82,8 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
 
     if (outFile && outFile != stdout)
         fclose(outFile);
+
+    pthread_join(plotThread, NULL);
     return 0;
 }
 
@@ -94,7 +99,12 @@ int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
     return 0;
 }
 
-doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
+doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread) {
+    FILE *graph = fopen("statistics/sortGraph.py", "wb");
+    fprintf(graph,  "import matplotlib.pyplot as plt\n"
+                    "import numpy as np\n"
+                    "data = []\n");
+
     clock_t startTime = 0, endTime = 0;
     clock_t totalTime = 0;
     char **textCopy = (char**) calloc(onegin.textLen, sizeof(char*));
@@ -108,6 +118,7 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
         sortFunc(onegin.text, sizeof(char*), onegin.textLen, cmp);
         endTime = clock();
         runningSTD(endTime - startTime, 0);
+        fprintf(graph, "data.append(%f)\n", double(endTime-startTime) / CLOCKS_PER_SEC * 1000);
         DBG_PRINTF(">>sortTime %3.3f\n", double(endTime - startTime) / CLOCKS_PER_SEC * 1000);
         memcpy(onegin.text, textCopy, onegin.textLen * sizeof(char*));
         totalTime += clock() - startTime;
@@ -119,6 +130,14 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
     result.second *= 1000.0*1000/CLOCKS_PER_SEC;
     free(textCopy);
 
+    fprintf(graph,  "plt.plot(data)\n"
+                    "plt.xlabel(\"Test number\")\n"
+                    "plt.ylabel(\"Test time, ms\")\n"
+                    "plt.grid()\n"
+                    //"plt.gca().set_ylim(bottom=0)\n"
+                    "plt.show()\n");
+    fclose(graph);
+    pthread_create(plotThread, NULL, plotGraph, NULL);
     printf("\n\n");
     printf("Testing took %3.2f s\n", double(totalTime) / CLOCKS_PER_SEC);
     return result;
@@ -151,4 +170,9 @@ void checkNULLStrings(text_t text) {
             fprintf(stderr, "NULL STRING: %lu index, len %lu\n", i, text.textLen);
         }
     }
+}
+
+void *plotGraph(void *arg) {
+    system("python3 statistics/sortGraph.py");
+    return NULL;
 }
