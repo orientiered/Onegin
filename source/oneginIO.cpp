@@ -13,7 +13,7 @@ enum error readTextFromFile(const char* fileName, text_t *textInfo) {
     FILE *textFile = fopen(fileName, "rb");
     if (!textFile) return FAIL;
 
-    char *data = (char*) calloc(textInfo->dataLen + 1, 1);
+    char *data = (char*) calloc(textInfo->dataLen + 1, sizeof(char));
     textInfo->data = data;
     DBG_PRINTF("Data pointer: %p\n", data);
     if (!data) {
@@ -70,7 +70,7 @@ void splitString(text_t *textInfo) {
 
 void splittedStringToArray(text_t *textInfo) {
     size_t linesCnt = textInfo->textLen;
-    char **strings = (char**) calloc(textInfo->textLen+1, sizeof(char **));
+    char **strings = (char**) calloc(textInfo->textLen+1, sizeof(char *));
     strings[0] = textInfo->data;
     strings[linesCnt] = NULL;
 
