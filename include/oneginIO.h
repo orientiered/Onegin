@@ -26,6 +26,8 @@ void splittedStringToArray(text_t *textInfo);
 
 void splitString(text_t *textInfo);
 
+/// @brief Prints nice progress bar ([###----], calculates estimated time)
+void percentageBar(unsigned value, unsigned maxValue, unsigned points, long long timePassed);
 
 
 #endif

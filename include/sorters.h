@@ -50,5 +50,4 @@ int ullCmp(const void* first, const void* second);
 
 sortFuncPtr_t chooseSortFunction(const char *sortName);
 
-
 #endif

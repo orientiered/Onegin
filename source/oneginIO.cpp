@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "onegin.h"
 //#define DEBUG_PRINTS
 #include "error_debug.h"
@@ -97,4 +98,24 @@ size_t getFileSize(const char *fileName) {
         return 0;
     }
     return (size_t)stBuf.st_size;
+}
+
+void percentageBar(unsigned value, unsigned maxValue, unsigned points, long long timePassed) {
+    //draw nice progress bar like
+    //[###|-----] 20.0% Remaining time: 20.4 s
+    printf("\r[");
+    for (unsigned i = 0; i < points; i++) {
+        double pointFill = double(value) / maxValue - double(i) / points;
+        if (pointFill > 0)
+            printf("#");
+        else if (pointFill > -0.5 / points)
+            printf("|");
+        else
+            printf("-");
+    }
+    printf("] %5.1f%%", double(value)/maxValue * 100);
+    if (value > 0 && timePassed > 0) {
+        printf(" Remaining time: %4.1f s", double(timePassed) / value * (maxValue - value) / CLOCKS_PER_SEC);
+    }
+    fflush(stdout);
 }
