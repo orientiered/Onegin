@@ -130,12 +130,13 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
     result.second *= 1000.0*1000/CLOCKS_PER_SEC;
     free(textCopy);
 
-    fprintf(graph,  "plt.plot(data)\n"
+    fprintf(graph,  "plt.plot(data, 'o')\n"
+                    "plt.plot([%f]*len(data))\n"
                     "plt.xlabel(\"Test number\")\n"
                     "plt.ylabel(\"Test time, ms\")\n"
                     "plt.grid()\n"
                     //"plt.gca().set_ylim(bottom=0)\n"
-                    "plt.show()\n");
+                    "plt.show()\n", result.first / 1000);
     fclose(graph);
     pthread_create(plotThread, NULL, plotGraph, NULL);
     printf("\n\n");
