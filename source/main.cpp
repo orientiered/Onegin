@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-//#define DEBUG_PRINTS
+#define DEBUG_PRINTS
 #include "error_debug.h"
 #include "mystring.h"
 #include "utils.h"
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
         return 0;
     }
 
-    checkNULLStrings(onegin); //searches for NULL strings in text
+    // assert(checkNULLStrings(onegin), true); //searches for NULL strings in text
     FILE *outFile = stdout;
     if (flags[OUTPUT].set)
         outFile = fopen(flags[OUTPUT].val._string, "wb");
@@ -46,34 +46,31 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     }
 
     sortFuncPtr_t sortFunc = quickSort;
+    cmpFuncPtr_t cmpFunc[] = {stringArrAlphaCmp, stringArrCmpBackward, ullCmp};
+
     if (flags[SORT_ALG].set) {
         sortFunc = chooseSortFunction(flags[SORT_ALG].val._string);
     }
 
     pthread_t plotThread = 0;
     if (flags[SORT_TIME].set) {
-        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, stringArrayCmp, &plotThread);
+        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, cmpFunc[0], &plotThread);
         if (averageTime.first > 40000) //>40ms
             printf("Average sorting time is %.1f+-%.1f ms\n", averageTime.first / 1000, averageTime.second / 1000);
         else
             printf("Average sorting time is %.3f+-%.3f ms\n", averageTime.first / 1000, averageTime.second / 1000);
     }
 
-    sortFunc(onegin.text, sizeof(char*), onegin.textLen, stringArrayCmp);
+    for (size_t cmpIndex = 0; cmpIndex < sizeof(cmpFunc)/sizeof(cmpFuncPtr_t); cmpIndex++) {
+        sortFunc(onegin.text, sizeof(char*), onegin.textLen, cmpFunc[cmpIndex]);
+        #ifndef NDEBUG
+        if (checkIsSorted(onegin, cmpFunc[cmpIndex]))
+            printf("Sort doesn't work\n");
+        #endif
+        writeTextToFile(onegin, outFile); //forward sorting
+        DBG_PRINTF("%u write\n", cmpIndex + 1);
 
-    if (checkIsSorted(onegin, stringArrayCmp))
-        printf("Sort doesn't work\n");
-
-    writeTextToFile(onegin, outFile); //forward sorting
-    DBG_PRINTF("First write\n");
-
-    sortFunc(onegin.text, sizeof(char*), onegin.textLen, stringArrayCmpBackward);
-    writeTextToFile(onegin, outFile); //sorting from end of strings
-    DBG_PRINTF("Second write\n");
-
-    sortFunc(onegin.text, sizeof(char*), onegin.textLen, ullCmp);
-    writeTextToFile(onegin, outFile); //original Text
-    DBG_PRINTF("Third write\n");
+    }
 
     deleteText(&onegin);
 

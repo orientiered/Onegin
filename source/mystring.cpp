@@ -41,6 +41,15 @@ int strcmp(const char *firstStr, const char *secondStr) {
     return int(*firstStr) - int(*secondStr);
 }
 
+int strcmpBackward(const char *firstStr, const char *secondStr) {
+    const char *firstStart = firstStr, *secondStart = secondStr;
+    firstStr  += maxINT((long long)strlen(firstStr)  - 1, 0);
+    secondStr += maxINT((long long)strlen(secondStr) - 1, 0);
+
+    for (; firstStr > firstStart && secondStr > secondStart && (*firstStr == *secondStr); firstStr--, secondStr--)
+        ;
+    return int(*firstStr) - int(*secondStr);
+}
 
 int stralphacmp(const char *firstStr, const char *secondStr) {
     while (*firstStr && *secondStr) {
@@ -52,8 +61,8 @@ int stralphacmp(const char *firstStr, const char *secondStr) {
         if (*firstStr)  firstStr++;
         if (*secondStr) secondStr++;
     }
-    firstStr = findAlphabetChar(firstStr);
-    secondStr = findAlphabetChar(secondStr);
+    //firstStr = findAlphabetChar(firstStr);
+    //secondStr = findAlphabetChar(secondStr);
     return tolower(*firstStr) - tolower(*secondStr);
 }
 

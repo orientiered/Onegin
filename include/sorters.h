@@ -38,8 +38,11 @@ void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
 /*
     @brief Comparator to sort array of strings (char**) using stralphacmp
 */
-int stringArrayCmp(const void *firstStr, const void *secondStr);
-int stringArrayCmpBackward(const void *firstStr, const void *secondStr);
+int stringArrCmp(const void *firstStr, const void *secondStr);
+int stringArrAlphaCmp(const void *firstStr, const void *secondStr);
+
+int stringArrCmpBackward(const void *firstStr, const void *secondStr);
+int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr);
 
 /*
     @brief Just stralphacmp function

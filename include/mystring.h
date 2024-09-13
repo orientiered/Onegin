@@ -8,6 +8,8 @@ char *strcat(char *s, const char *ct);
 char *strncat(char *s, const char *ct, size_t n);
 
 int strcmp(const char *firstStr, const char *secondStr);
+int strcmpBackward(const char *firstStr, const char *secondStr);
+
 int stralphacmp(const char *firstStr, const char *secondStr);
 int stralphacmpBackward(const char *firstStr, const char *secondStr);
 

@@ -10,7 +10,6 @@ enum argType {
     tINT,           ///< Next argument is integer
     tFLOAT,         ///< Next argument is double
     tSTRING,        ///< Next argument is string(char*)
-    tARRAYPTR       ///< Next argument is pointer to itself in argv
 };
 
 

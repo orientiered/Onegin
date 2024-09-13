@@ -9,6 +9,7 @@
 
 static void insertionSortBase(void *array, size_t elemSize, size_t alignment, size_t length, cmpFuncPtr_t cmp);
 static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
+static llPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
 
 void bubbleSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
     for (size_t rightBoundary = length; rightBoundary > 0; rightBoundary--) {
@@ -89,25 +90,47 @@ void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
 
 static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp) {
     swap(array, pivot, elemSize); //moving random element to start of the array
-    long long sepLeft = 0, sepRight = 1; //[left;right) - block with equal elements
-    long long left = sepRight, right = length - 1; //for all i >= right array[i] > sepElement
+    char *sepLeft = (char*) array, *sepRight = (char*) array + elemSize; //[left;right) - block with equal elements
+    char *left = sepRight, *right = (char*) array + elemSize * (length - 1); //for all i >= right array[i] > sepElement
     int cmpResult = 0;
     while (left <= right) {
-        cmpResult = cmp((char*)array + elemSize * sepLeft, (char*) array + elemSize * left);
+        cmpResult = cmp(sepLeft, left);
         if (cmpResult < 0) {
-            swap((char*) array + elemSize * left, (char*) array + elemSize * right, elemSize);
-            right--;
+            swap(left, right, elemSize);
+            right -= elemSize;
         } else if (cmpResult > 0) {
-            swap((char*) array + elemSize * sepLeft, (char*) array + elemSize * left, elemSize);
-            sepLeft++;
-            sepRight++;
-            left++;
+            swap(sepLeft, left, elemSize);
+            sepLeft += elemSize;
+            sepRight += elemSize;
+            left += elemSize;
         } else {
-            sepRight++;
-            left++;
+            sepRight += elemSize;
+            left += elemSize;
         }
     }
-    llPair_t separator = {sepLeft, sepRight};
+    llPair_t separator = {(size_t)(sepLeft - (char*)array) / elemSize, (size_t)(sepRight - (char*)array) / elemSize};
+    return separator;
+}
+
+static llPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp) {
+    char **pivotElem = (char **) pivot;
+    char *left = (char*)array, *right = (char*) array + elemSize * (length - 1);
+    while (1) {
+        while (cmp(pivotElem, right) < 0)
+            right -= elemSize;
+
+        while (cmp(pivotElem, left) > 0)
+            left += elemSize;
+
+        if (left >= right) {
+            llPair_t separator = {(size_t)(right - (char*)array) / elemSize, (size_t)(right - (char*)array) / elemSize + 1};
+            return separator;
+        }
+        swap(left, right, elemSize);
+        left += elemSize;
+        right -= elemSize;
+    }
+    llPair_t separator = {0, 0};
     return separator;
 }
 
@@ -118,18 +141,30 @@ int ullCmp(const void* first, const void* second) {
 int strvoidcmp(const void *firstStr, const void *secondStr) {
     return stralphacmp((const char*) firstStr, (const char*) secondStr);
 }
-int stringArrayCmp(const void *firstStr, const void *secondStr) {
+
+int stringArrCmp(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return stralphacmp(*(const char **)firstStr, *(const char**)secondStr);
+    return strcmp(*(char * const *)firstStr, *(char * const *)secondStr);
 }
 
-int stringArrayCmpBackward(const void *firstStr, const void *secondStr) {
+int stringArrAlphaCmp(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return stralphacmpBackward(*(const char **)firstStr, *(const char**)secondStr);
+    return stralphacmp(*(char * const *)firstStr, *(char * const *)secondStr);
 }
 
+int stringArrCmpBackward(const void *firstStr, const void *secondStr) {
+    MY_ASSERT(firstStr, return 0);
+    MY_ASSERT(secondStr, return 0);
+    return strcmpBackward(*(char * const *)firstStr, *(char * const *)secondStr);
+}
+
+int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr) {
+    MY_ASSERT(firstStr, return 0);
+    MY_ASSERT(secondStr, return 0);
+    return stralphacmpBackward(*(char * const *)firstStr, *(char * const *)secondStr);
+}
 sortFuncPtr_t chooseSortFunction(const char *sortName) {
     //choose sort function based on it's name
     const sortFuncPtr_t sortFunctions[] = {

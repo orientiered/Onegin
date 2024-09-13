@@ -2,6 +2,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "error_debug.h"
 #include "utils.h"
 #include "onegin.h"
@@ -10,6 +12,9 @@
 #include "oneginIO.h"
 
 doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread) {
+    struct stat stBuf = {};
+    if (stat("statistics", &stBuf) == -1)
+        system("mkdir statistics");
     FILE *graph = fopen("statistics/sortGraph.py", "wb");
     fprintf(graph,  "import matplotlib.pyplot as plt\n"
                     "import numpy as np\n"

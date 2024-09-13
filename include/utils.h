@@ -13,6 +13,11 @@ typedef struct llPair {
     long long second;
 } llPair_t;
 
+typedef struct voidPtrPair {
+    void *first;
+    void *second;
+} voidPtrPair_t;
+
 long long maxINT(long long a, long long b);
 long long minINT(long long a, long long b);
 
