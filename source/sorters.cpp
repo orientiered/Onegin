@@ -11,7 +11,7 @@ static void insertionSortBase(void *array, size_t elemSize, size_t alignment, si
 static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
 static llPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
 
-void bubbleSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
+void bubbleSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     for (size_t rightBoundary = length; rightBoundary > 0; rightBoundary--) {
         unsigned char swapFlag = 0; //if we didn't swap anything, array is sorted
         for (size_t i = 0; i < rightBoundary-1; i++) {
@@ -25,7 +25,7 @@ void bubbleSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
 }
 
 
-void shellSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
+void shellSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     // https://oeis.org/A036562
     const size_t steps[] = {1, 8, 23, 77, 281, 1073, 4193, 16577, 65921, 262913, 1050113, 4197377, 16783361, 67121153, 268460033, 1073790977};
     const short stepsSize = (short)sizeof(steps)/sizeof(size_t);
@@ -38,11 +38,11 @@ void shellSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
     }
 }
 
-void insertionSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
+void insertionSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     insertionSortBase(array, elemSize, elemSize, length, cmp);
 }
 
-void insertionSortSwapless(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
+void insertionSortSwapless(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     //version without swap() function. Moving elements instead
     void *tempElem = calloc(1, elemSize);
     for (size_t index = 1; index < length; index++) {
@@ -71,7 +71,7 @@ static void insertionSortBase(void *array, size_t elemSize, size_t alignment, si
     }
 }
 
-void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
+void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     DBG_PRINTF("length = %ld\n", length);
     MY_ASSERT(array, return);
     if (length <= 1) return;
@@ -82,37 +82,41 @@ void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp) {
     }
 
     char *pivot = (char*) array + elemSize * (length / 2);
-    llPair_t sep = quickSortPartition(array, elemSize, length, pivot, cmp);
+    llPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
 
-    quickSort(array, elemSize, sep.first+1, cmp);
-    quickSort((char*) array + elemSize * sep.second, elemSize, length - sep.second, cmp);
+    quickSort(array, sep.first + 1, elemSize, cmp);
+    quickSort((char*) array + elemSize * sep.second, length - sep.second, elemSize, cmp);
 }
 
-static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp) {
-    swap(array, pivot, elemSize); //moving random element to start of the array
-    char *sepLeft = (char*) array, *sepRight = (char*) array + elemSize; //[left;right) - block with equal elements
-    char *left = sepRight, *right = (char*) array + elemSize * (length - 1); //for all i >= right array[i] > sepElement
+static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
+    swap(array, pivot, elemSize); //moving pivot element to start of the array
+    // <<<<<<=====......>>>>
+    //       ^    ^    ^
+    //     left head right
+    // <=> - elements <=> pivot(left);
+    // . - elements, that are not partitioned yet
+    char    *left  = (char*) array,
+            *head  = (char*) array + elemSize,
+            *right = (char*) array + elemSize * (length - 1);
     int cmpResult = 0;
-    while (left <= right) {
-        cmpResult = cmp(sepLeft, left);
+    while (head <= right) {
+        cmpResult = cmp(left, head);
         if (cmpResult < 0) {
-            swap(left, right, elemSize);
+            swap(head, right, elemSize);
             right -= elemSize;
         } else if (cmpResult > 0) {
-            swap(sepLeft, left, elemSize);
-            sepLeft += elemSize;
-            sepRight += elemSize;
+            swap(left, head, elemSize);
             left += elemSize;
+            head += elemSize;
         } else {
-            sepRight += elemSize;
-            left += elemSize;
+            head += elemSize;
         }
     }
-    llPair_t separator = {(size_t)(sepLeft - (char*)array) / elemSize, (size_t)(sepRight - (char*)array) / elemSize};
+    llPair_t separator = {(long long)(left - (char*)array) / elemSize, (long long)(head - (char*)array) / elemSize};
     return separator;
 }
 
-static llPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp) {
+static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
     char **pivotElem = (char **) pivot;
     char *left = (char*)array, *right = (char*) array + elemSize * (length - 1);
     while (1) {
@@ -165,6 +169,7 @@ int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr) {
     MY_ASSERT(secondStr, return 0);
     return stralphacmpBackward(*(char * const *)firstStr, *(char * const *)secondStr);
 }
+
 sortFuncPtr_t chooseSortFunction(const char *sortName) {
     //choose sort function based on it's name
     const sortFuncPtr_t sortFunctions[] = {

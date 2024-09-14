@@ -5,7 +5,7 @@
 #define SORTERS_H
 
 typedef int (*cmpFuncPtr_t)(const void *first, const void *second);
-typedef void(*sortFuncPtr_t)(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+typedef void(*sortFuncPtr_t)(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
 /*
     @brief Simple bubble sort
@@ -16,7 +16,7 @@ typedef void(*sortFuncPtr_t)(void *array, size_t elemSize, size_t length, cmpFun
     @param cmp Pointer to comparator function
 
 */
-void bubbleSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+void bubbleSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
 /*
     @brief Simple insertion sort
@@ -27,13 +27,13 @@ void bubbleSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
     @param cmp Pointer to comparator function
 
 */
-void insertionSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+void insertionSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
-void insertionSortSwapless(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+void insertionSortSwapless(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
-void shellSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+void shellSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
-void quickSort(void *array, size_t elemSize, size_t length, cmpFuncPtr_t cmp);
+void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp);
 
 /*
     @brief Comparator to sort array of strings (char**) using stralphacmp

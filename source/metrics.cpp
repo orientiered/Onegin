@@ -30,7 +30,7 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
     for (unsigned test = 0; test < testNumber; test++) {
         percentageBar(test, testNumber, 15, totalTime);
         startTime = clock();
-        sortFunc(onegin.text, sizeof(char*), onegin.textLen, cmp);
+        sortFunc(onegin.text, onegin.textLen, sizeof(char*), cmp);
         endTime = clock();
         runningSTD(endTime - startTime, 0);
         fprintf(graph, "data.append(%f)\n", double(endTime-startTime) / CLOCKS_PER_SEC * 1000);
