@@ -14,10 +14,9 @@
 doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread) {
     struct stat stBuf = {};
     if (stat("statistics", &stBuf) == -1)
-        system("mkdir statistics");
+        system("mkdir statistics"); // TODO: mkdir -p
     FILE *graph = fopen("statistics/sortGraph.py", "wb");
     fprintf(graph,  "import matplotlib.pyplot as plt\n"
-                    "import numpy as np\n"
                     "data = []\n");
 
     clock_t startTime = 0, endTime = 0;

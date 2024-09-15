@@ -15,6 +15,7 @@ enum error processArgs(argVal_t flags[], int argc, char *argv[]) {
             remainToScan = scanFullArgument(flags, argc-i, argv+i);
         else
             remainToScan = scanShortArguments(flags, argc-i, argv+i);
+        // TODO: remainToScan? I think skipped is better.
 
         if (remainToScan < 0) return BAD_EXIT; //remainToScan < 0 is universal error code
         i  = argc - remainToScan; //moving to next arguments
@@ -26,13 +27,15 @@ int scanFullArgument(argVal_t flags[], int remainToScan, char *argv[]) {
     for (int flagIndex = 0; flagIndex < argsSize; flagIndex++) {        //just iterating over all flags
         if (strcmp(argv[0], args[flagIndex].argFullName) != 0) continue;
         return scanToFlag(&flags[flagIndex], remainToScan, argv+1)-1;   //we pass remainToScan forward
+        // TODO:                                                         ^^^^^ give me some space, I can't breathe
     }                                                                   //but scanToFlag reads flag argument, so argv+1
     return -1;                                                          //-1 because we read argv flag
 }
 
 int scanShortArguments(argVal_t flags[], int remainToScan, char *argv[]) {
+    // TODO: c??
     for (char *c = argv[0]+1; (*c != '\0') && (remainToScan > 0); c++) { //iterating over short flags string
-        int scannedArg = 0;
+        int scannedArg = 0; // TODO: bool in C++ or <stdbool.h> from C if you are pedantic
         for (int flagIndex = 0; flagIndex < argsSize; flagIndex++) {
             if (*c != args[flagIndex].argShortName[1]) continue;
             scannedArg = 1;
@@ -47,14 +50,23 @@ int scanShortArguments(argVal_t flags[], int remainToScan, char *argv[]) {
 }
 
 int scanToFlag(argVal_t* flag, int remainToScan, char *argv[]) {
-    flag->set = 1;          //activating flag
+    flag->set = 1;          //activating flag // TODO: think, do you need to have redundant flags in your array?
+
+    // TODO: can you do it like that? (just a thought)
+    // const char *format = "";
+
+    // switch(flag->type) {
+    //     case tINT: format = "%d"; break;
+    //     // ...
+    // };
+
     switch(flag->type) {
-    case tINT:
+    case tINT: // TODO: tINT? What is «t»
         if (--remainToScan >= 0) //checking if there is argument to scan
             sscanf(argv[0], "%d", &flag->val._int);
         break;
     case tFLOAT:
-        if (--remainToScan >= 0)
+        if (--remainToScan >= 0) // TODO: duplication?
             sscanf(argv[0], "%lf", &flag->val._float);
         break;
     case tSTRING:
@@ -63,7 +75,7 @@ int scanToFlag(argVal_t* flag, int remainToScan, char *argv[]) {
         break;
     case tBLANK:
         break;
-    default:
+    default: // TODO: assert?
         break;
     }
     return remainToScan;

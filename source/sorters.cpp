@@ -75,7 +75,7 @@ void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     DBG_PRINTF("length = %ld\n", length);
     MY_ASSERT(array, return);
     if (length <= 1) return;
-    if (length == 2) {
+    if (length == 2) { // TODO: small array?
         if (cmp(array, (char*) array + elemSize) > 0)
             swap(array, (char*) array + elemSize, elemSize);
         return;
@@ -84,20 +84,22 @@ void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     char *pivot = (char*) array + elemSize * (length / 2);
     llPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
 
+    // TODO: infinite loop on 1 2 1 (delete + 1)
     quickSort(array, sep.first + 1, elemSize, cmp);
     quickSort((char*) array + elemSize * sep.second, length - sep.second, elemSize, cmp);
 }
 
 static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
     swap(array, pivot, elemSize); //moving pivot element to start of the array
+    // TODO: out of bounds on: 1 1 1
     // <<<<<<=====......>>>>
     //       ^    ^    ^
     //     left head right
     // <=> - elements <=> pivot(left);
     // . - elements, that are not partitioned yet
     char    *left  = (char*) array,
-            *head  = (char*) array + elemSize,
-            *right = (char*) array + elemSize * (length - 1);
+            *head  = (char*) array + elemSize, // TODO: get_array_element(array, elemSize, 1) // custom [] // struct pointer {}...
+            *right = (char*) array + elemSize * (length - 1); // TODO: right + 1?
     int cmpResult = 0;
     while (head <= right) {
         cmpResult = cmp(left, head);
@@ -142,7 +144,7 @@ int ullCmp(const void* first, const void* second) {
     return *(unsigned long long*) first - *(unsigned long long*) second;
 }
 
-int strvoidcmp(const void *firstStr, const void *secondStr) {
+int strvoidcmp(const void *firstStr, const void *secondStr) { // TODO: name??
     return stralphacmp((const char*) firstStr, (const char*) secondStr);
 }
 
