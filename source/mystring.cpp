@@ -27,7 +27,7 @@ char *strcat(char *s, const char *ct) {
     return s_copy;
 }
 
-char *strncat(char *s, const char *ct, size_t n) {
+char *strncat(char *s, const char *ct, size_t n) { // TODO: K&R is not always the best naming reference
     char *s_copy = s;
     while (*s) s++;
     while (n && (*s++ = *ct++) != '\0') n--;
@@ -127,7 +127,7 @@ const char* strstr(const char* text, const char* str) {
 
     if (strSize > textSize) return NULL;
 
-    int* prefix = (int*) calloc(strSize, sizeof(int));
+    int* prefix = (int*) calloc(strSize, sizeof(int)); // TODO: calloc in strstr??
     prefix[0] = 0;
     for (int i = 1; i < strSize; i++) {
         int curLen = prefix[i-1];

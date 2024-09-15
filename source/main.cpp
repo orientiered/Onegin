@@ -16,6 +16,27 @@ void checkNULLStrings(text_t text);
 int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp);
 void test();
 
+// TODO: make main look less like yours and more like this:
+//
+// parsed_args = parse_args(args, argc, argv);
+// if (fignya...(parsed_args))
+//     return EXIT_FAILURE;
+//
+//  input_file = get_argument_or_default(parsed, args, "--input", "onegin.txt");
+// output_file = get_argument(parsed, args, "--output");
+//
+// propagate_error(text = read_text(input_file))
+//
+// sort(text, lexicographical)
+// propagate_error(print(text, output_file))
+//
+// sort(text, lexicographical_reversed)
+// propagate_error(print(text, output_file))
+//
+// restore_original(text)
+// propagate_error(print(text, output_file))
+
+
 int main(int argc, char *argv[]) { //TODO: const char *argv[]
     test();
     argVal_t flags[argsSize] = {};
@@ -29,11 +50,11 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
 
     text_t onegin = {};
 
-    const char *fileName = "OneginText.txt";
+    const char *fileName = "OneginText.txt"; // TODO: get_argument_or_default
     if (flags[INPUT].set)
         fileName = flags[INPUT].val._string;
 
-    if (readTextFromFile(fileName, &onegin) != GOOD_EXIT) {
+    if (readTextFromFile(fileName, &onegin) != GOOD_EXIT) { // TODO: is_success(...)?
         fprintf(stderr, "Can't read from file\n");
         return 0;
     }
@@ -57,12 +78,13 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     pthread_t plotThread = 0;
     if (flags[SORT_TIME].set) {
         doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, cmpFuncs[0], &plotThread);
-        if (averageTime.first > 40000) //>40ms
+        if (averageTime.first > 40000) //>40ms // TODO: this is a bit weird?
             printf("Average sorting time is %.1f+-%.1f ms\n", averageTime.first / 1000, averageTime.second / 1000);
         else
             printf("Average sorting time is %.3f+-%.3f ms\n", averageTime.first / 1000, averageTime.second / 1000);
     }
 
+    // TODO: ARRAY_SIZE macro? ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
     for (size_t cmpIndex = 0; cmpIndex < sizeof(cmpFuncs)/sizeof(cmpFuncPtr_t); cmpIndex++) {
         sortFunc(onegin.text, onegin.textLen, sizeof(char*), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG

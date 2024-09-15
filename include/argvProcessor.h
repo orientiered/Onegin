@@ -28,7 +28,7 @@ typedef struct argVal {
     enum argType type;          ///< Data type which argument stores
     union {                     ///< Union with available types
         int _int;
-        double _float;
+        double _float; // TODO: reserved name for linker, use "<name>_"
         const char *_string;
         char **_arrayPtr;
     } val;
@@ -36,7 +36,7 @@ typedef struct argVal {
 
 
 /// @brief Enum to easily find needed flag
-enum argNamesEnum {
+enum argNamesEnum { // TODO: come up with a way to reuse your arg parsing library
     INPUT,
     OUTPUT,
     SORT_TIME,
@@ -46,7 +46,7 @@ enum argNamesEnum {
 
 
 /// @brief Global array with descriptions of all available arguments
-const argDescriptor_t args[] {
+const argDescriptor_t args[] { // TODO: cringe, global variable
     {tSTRING,   "-i",   "--input",      "Next argument is name of input file"},
     {tSTRING,   "-o",   "--output",     "Next argument is name of output file"},
     {tBLANK,    "-t",   "--time",       "Prints average time to sort file"},
@@ -83,7 +83,7 @@ enum error processArgs(argVal_t flags[], int argc, char *argv[]);
 
     Counts current argument as processed only after next argument was processed by scanToFlag() function
 */
-int scanFullArgument(argVal_t flags[], int remainToScan, char *argv[]);
+int scanFullArgument(argVal_t flags[], int remainToScan, char *argv[]); // TODO: Why export it?
 
 
 /*!
