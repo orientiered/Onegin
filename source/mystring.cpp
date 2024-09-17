@@ -43,11 +43,15 @@ int strcmp(const char *firstStr, const char *secondStr) {
 
 int strcmpBackward(const char *firstStr, const char *secondStr) {
     const char *firstStart = firstStr, *secondStart = secondStr;
+    //slow, basic version
+    //works on any strings without additional info
     firstStr  += maxINT((long long)strlen(firstStr)  - 1, 0);
     secondStr += maxINT((long long)strlen(secondStr) - 1, 0);
 
-    for (; firstStr > firstStart && secondStr > secondStart && (*firstStr == *secondStr); firstStr--, secondStr--)
+    for (; (firstStr > firstStart) && (secondStr > secondStart) && (*firstStr == *secondStr); firstStr--, secondStr--)
         ;
+    if ((*firstStr == *secondStr) && ((firstStr == firstStart) ^ (secondStr == secondStart)))
+        return int(firstStr - firstStart) - int(secondStr - secondStart);
     return int(*firstStr) - int(*secondStr);
 }
 
@@ -81,6 +85,8 @@ int stralphacmpBackward(const char *firstStr, const char *secondStr) {
     }
     firstStr = findAlphabetCharBackward(firstStr, firstStart);
     secondStr = findAlphabetCharBackward(secondStr, secondStart);
+    if ((tolower(*firstStr) == tolower(*secondStr)) && ((firstStr == firstStart) ^ (secondStr == secondStart)))
+        return int(firstStr - firstStart) - int(secondStr - secondStart);
     return tolower(*firstStr) - tolower(*secondStr);
 }
 
@@ -122,15 +128,15 @@ char *strrchr(char *s, char c) {
 }
 
 const char* strstr(const char* text, const char* str) {
-    int textSize = (int) strlen(text);
-    int strSize =  (int) strlen(str);
+    size_t textSize = (size_t) strlen(text);
+    size_t strSize =  (size_t) strlen(str);
 
     if (strSize > textSize) return NULL;
 
     int* prefix = (int*) calloc(strSize, sizeof(int)); // TODO: calloc in strstr??
     prefix[0] = 0;
-    for (int i = 1; i < strSize; i++) {
-        int curLen = prefix[i-1];
+    for (size_t i = 1; i < strSize; i++) {
+        size_t curLen = prefix[i-1];
         while (curLen > 0 && str[i] != str[curLen])
             curLen = prefix[curLen-1];
         if (str[i] == str[curLen])
@@ -138,8 +144,8 @@ const char* strstr(const char* text, const char* str) {
         prefix[i] = curLen;
     }
 
-    int curLen = 0;
-    for (int i = 0; i < textSize; i++) {
+    size_t curLen = 0;
+    for (size_t i = 0; i < textSize; i++) {
         while (curLen > 0 && text[i] != str[curLen])
             curLen = prefix[curLen-1];
 

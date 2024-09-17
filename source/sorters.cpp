@@ -71,6 +71,8 @@ static void insertionSortBase(void *array, size_t elemSize, size_t alignment, si
     }
 }
 
+#define GET_ELEM(array, i) (char *) (array) + elemSize * (i)
+
 void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     DBG_PRINTF("length = %ld\n", length);
     MY_ASSERT(array, return);
@@ -81,25 +83,29 @@ void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
         return;
     }
 
-    char *pivot = (char*) array + elemSize * (length / 2);
+    char *pivot = GET_ELEM(array, length / 2);
     llPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
 
-    // TODO: infinite loop on 1 2 1 (delete + 1)
-    quickSort(array, sep.first + 1, elemSize, cmp);
-    quickSort((char*) array + elemSize * sep.second, length - sep.second, elemSize, cmp);
+// array        array[length-1]
+//  |                |
+//  x...x||||||x.....x
+//       ^     ^
+//  sep.first  sep.second
+//  x - new boundaries of qsort
+    quickSort(array, (size_t) sep.first, elemSize, cmp);
+    quickSort(GET_ELEM(array, sep.second), (size_t)(length - sep.second), elemSize, cmp);
 }
 
 static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
     swap(array, pivot, elemSize); //moving pivot element to start of the array
-    // TODO: out of bounds on: 1 1 1
     // <<<<<<=====......>>>>
     //       ^    ^    ^
     //     left head right
     // <=> - elements <=> pivot(left);
     // . - elements, that are not partitioned yet
-    char    *left  = (char*) array,
-            *head  = (char*) array + elemSize, // TODO: get_array_element(array, elemSize, 1) // custom [] // struct pointer {}...
-            *right = (char*) array + elemSize * (length - 1); // TODO: right + 1?
+    char    *left  = GET_ELEM(array, 0),
+            *head  = GET_ELEM(array, 1), // TODO: get_array_element(array, elemSize, 1) // custom [] // struct pointer {}...
+            *right = GET_ELEM(array, length-1); // TODO: right + 1?
     int cmpResult = 0;
     while (head <= right) {
         cmpResult = cmp(left, head);
@@ -114,13 +120,18 @@ static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, 
             head += elemSize;
         }
     }
-    llPair_t separator = {(long long)(left - (char*)array) / elemSize, (long long)(head - (char*)array) / elemSize};
+    MY_ASSERT(left <= GET_ELEM(array, length-1), abort());
+    MY_ASSERT(head <= GET_ELEM(array, length), abort());
+    llPair_t separator = {(size_t)(left - (char*)array) / elemSize, (size_t)(head - (char*)array) / elemSize};
     return separator;
 }
 
 static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
-    char **pivotElem = (char **) pivot;
-    char *left = (char*)array, *right = (char*) array + elemSize * (length - 1);
+    char *pivotElem = (char *) calloc(1, elemSize);
+    memcpy(pivotElem, pivot, elemSize);
+
+    char *left  = GET_ELEM(array, 0),
+         *right = GET_ELEM(array, length-1);
     while (1) {
         while (cmp(pivotElem, right) < 0)
             right -= elemSize;
@@ -129,6 +140,9 @@ static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSi
             left += elemSize;
 
         if (left >= right) {
+            free(pivotElem);
+            MY_ASSERT(right <= GET_ELEM(array, length-1), abort());
+            MY_ASSERT(right >= GET_ELEM(array, 0), abort());
             llPair_t separator = {(size_t)(right - (char*)array) / elemSize, (size_t)(right - (char*)array) / elemSize + 1};
             return separator;
         }
@@ -136,16 +150,17 @@ static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSi
         left += elemSize;
         right -= elemSize;
     }
+    free(pivotElem);
+    MY_ASSERT(0, fprintf(stderr, "Logic error in qsort partition\n"); abort(););
     llPair_t separator = {0, 0};
     return separator;
 }
 
-int ullCmp(const void* first, const void* second) {
-    return *(unsigned long long*) first - *(unsigned long long*) second;
-}
+#undef GET_ELEM
 
-int strvoidcmp(const void *firstStr, const void *secondStr) { // TODO: name??
-    return stralphacmp((const char*) firstStr, (const char*) secondStr);
+int ullCmp(const void* first, const void* second) {
+    typedef const unsigned long long cull_t;
+    return int (*(cull_t *) first - *(cull_t *) second);
 }
 
 int stringArrCmp(const void *firstStr, const void *secondStr) {

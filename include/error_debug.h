@@ -1,5 +1,5 @@
 /// @file
-/// @brief Struct and macros for error handling // TODO: It's obvious, no need to specify that you put structs in header file
+/// @brief Exit status, error handling
 
 #ifndef ERROR_DEBUG_H
 #define ERROR_DEBUG_H
@@ -8,10 +8,9 @@
 
 /*!
   // TODO: A better doc would be: «Propagate error»
-    @brief if expr is bad error, returns expr and prints debug info
+    @brief Propagate error
 
-    @param[in] expr Expression or function of type enum error
-    //                            ^^^^^^^^ TODO: obvious, function calls are expressions
+    @param[in] expr Expression of type enum error
 
     If expr is BAD_EXIT or FAIL, macro will print file, function and line where expression ocurred <br>
     Then it will return expr <br>
@@ -29,31 +28,27 @@
 
 
 /*!
-    @brief if expr is false, executes run
+    @brief Assert with custom behaviour
 
     @param[in] expr Any expression of integer type
-    @param[in] run Set of commands to run
+    @param[in] ... Set of commands to run
 
     If expr is false (=0), macro will print file, function and line where assertion was made <br>
-    ALso prints expression <br>
-    Prints to stderr <br>
+    ALso prints expression to stderr <br>
+    Will run all commands after expression <br>
     You can deactivate assert by defining NDEBUG
 */
 //#define NDEBUG
 
-
-// MY_ASSERT(foo(), { // TODO: think what will happen
-//     int a, b = (1, 2);
-// })
 #ifndef NDEBUG
 #define MY_ASSERT(expr, ...)                                                                                                    \
         do {                                                                                                                    \
             if (!(expr)) {                                                                                                      \
                 fprintf(stderr, RED "Assertion failed:\n\t[" #expr "]\n" RESET_C);                                              \
                 fprintf(stderr, RED "File: %s, function: %s, line: %d\n" RESET_C, __FILE__, __PRETTY_FUNCTION__, __LINE__);     \
-                {                                                                                                            \
-                    __VA_ARGS__;                                                                                                        \
-                }                                                                                                    \
+                {                                                                                                               \
+                    __VA_ARGS__;                                                                                                \
+                }                                                                                                               \
             }                                                                                                                   \
         }while(0)
 #else
@@ -61,8 +56,8 @@
 #endif
 
 
-/*! // TODO: "macro" is obvious?
-    @brief Macro that prints everything in stderr. Acts as printf
+/*!
+    @brief Printf for debug
 
     Activated by defining DEBUG_PRINTS, defines DBG_PRINTF(...) macro
 */

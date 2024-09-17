@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #define DEBUG_PRINTS
 #include "error_debug.h"
 #include "mystring.h"
@@ -59,7 +58,7 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
         return 0;
     }
 
-    // assert(checkNULLStrings(onegin), true); //searches for NULL strings in text
+    MY_ASSERT((checkNULLStrings(onegin), true), ;); //searches for NULL strings in text
     FILE *outFile = stdout;
     if (flags[OUTPUT].set)
         outFile = fopen(flags[OUTPUT].val._string, "wb");
@@ -69,20 +68,10 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     }
 
     sortFuncPtr_t sortFunc = quickSort;
-    cmpFuncPtr_t cmpFuncs[] = {stringArrCmpBackward, stringArrAlphaCmp, ullCmp};
+    cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackward , ullCmp};
 
-    if (flags[SORT_ALG].set) {
+    if (flags[SORT_ALG].set)
         sortFunc = chooseSortFunction(flags[SORT_ALG].val._string);
-    }
-
-    pthread_t plotThread = 0;
-    if (flags[SORT_TIME].set) {
-        doublePair_t averageTime = sortTimeTest(50, onegin, sortFunc, cmpFuncs[0], &plotThread);
-        if (averageTime.first > 40000) //>40ms // TODO: this is a bit weird?
-            printf("Average sorting time is %.1f+-%.1f ms\n", averageTime.first / 1000, averageTime.second / 1000);
-        else
-            printf("Average sorting time is %.3f+-%.3f ms\n", averageTime.first / 1000, averageTime.second / 1000);
-    }
 
     // TODO: ARRAY_SIZE macro? ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
     for (size_t cmpIndex = 0; cmpIndex < sizeof(cmpFuncs)/sizeof(cmpFuncPtr_t); cmpIndex++) {
@@ -92,16 +81,20 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
             printf("Sort doesn't work\n");
         #endif
         writeTextToFile(onegin, outFile); //forward sorting
-        DBG_PRINTF("%u write\n", cmpIndex + 1);
+        DBG_PRINTF("%lu write\n", cmpIndex + 1);
 
     }
+
+    if (flags[SORT_TIME].set)
+        sortTimeTest(50, onegin, sortFunc, cmpFuncs[0]);
+    if (flags[SORT_GRAPH].set)
+        plotSortTimeGraph();
 
     deleteText(&onegin);
 
     if (outFile && outFile != stdout)
         fclose(outFile);
 
-    pthread_join(plotThread, NULL);
     return 0;
 }
 
@@ -111,7 +104,7 @@ int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
     int notSorted = 0;
     for (size_t i = 0; i < textInfo.textLen-1; i++) {
         if (cmp(textInfo.text + i, textInfo.text + i + 1) > 0) {
-            DBG_PRINTF("i = %u\n%s\n%s\n", i, *(textInfo.text + i), *(textInfo.text + i + 1));
+            DBG_PRINTF("i = %lu\n%s\n%s\n", i, *(textInfo.text + i), *(textInfo.text + i + 1));
             notSorted = 1;
         }
     }
@@ -129,11 +122,11 @@ void checkNULLStrings(text_t text) {
 
 void test() {
     unsigned long long *data = (unsigned long long*) calloc(1000, sizeof(unsigned long long));
-    for (int i = 0; i < 1000; i++) data[i] = (rand() % 1000) * 1000;
+    for (int i = 0; i < 1000; i++) data[i] = abs((rand() % 1000) * 1000);
     quickSort(data, 1000, sizeof(unsigned long long), ullCmp);
     for (size_t i = 0; i < 1000 - 1; i++) {
         if (ullCmp(&data[i], &data[i+1]) > 0) {
-            DBG_PRINTF("i = %u\n%u\n%u\n", i, data[i], data[i+1]);
+            DBG_PRINTF("i = %lu\n%llu\n%llu\n", i, data[i], data[i+1]);
         }
     }
     free(data);

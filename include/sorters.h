@@ -44,11 +44,6 @@ int stringArrAlphaCmp(const void *firstStr, const void *secondStr);
 int stringArrCmpBackward(const void *firstStr, const void *secondStr);
 int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr);
 
-/*
-    @brief Just stralphacmp function
-*/
-int strvoidcmp(const void *firstStr, const void *secondStr);
-
 int ullCmp(const void* first, const void* second);
 
 sortFuncPtr_t chooseSortFunction(const char *sortName);

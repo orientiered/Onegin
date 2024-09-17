@@ -1,12 +1,13 @@
 #ifndef METRICS_H
 #define METRICS_H
 
-/// @brief tests sorting algorithm, calculates average time and STD, prints graph with python matplotlib
-/// You need plotThread because matplotlib stops execution of program
-doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread);
+/// @brief Runs sorting function many times to calculate average time
+/// Return pair of double's. First value is average time in ms, second - standard deviation of it. <br>
+/// Also creates file "statistics/data.txt" with all data points
+doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp);
 
-/// @brief Runs python script. arg could be anything
-/// This function should be executed in separate thread
-void *plotGraph(void *arg);
+/// @brief Plots graph with sorting time
+/// Uses "statistics/data.txt" and python script with matplotlib
+void plotSortTimeGraph();
 
 #endif

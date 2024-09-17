@@ -40,6 +40,7 @@ enum argNamesEnum { // TODO: come up with a way to reuse your arg parsing librar
     INPUT,
     OUTPUT,
     SORT_TIME,
+    SORT_GRAPH,
     SORT_ALG,
     HELP
 };
@@ -50,6 +51,7 @@ const argDescriptor_t args[] { // TODO: cringe, global variable
     {tSTRING,   "-i",   "--input",      "Next argument is name of input file"},
     {tSTRING,   "-o",   "--output",     "Next argument is name of output file"},
     {tBLANK,    "-t",   "--time",       "Prints average time to sort file"},
+    {tBLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},
     {tSTRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm\n"
                                         "Available algs: bubble, insertion, shell, qsort"},
     {tBLANK,    "-h",   "--help",       "Prints help message"}
@@ -70,51 +72,6 @@ const size_t argsSize = sizeof(args)/sizeof(argDescriptor_t);
     Uses global constant array of arguments args and it's size argsSize
 */
 enum error processArgs(argVal_t flags[], int argc, char *argv[]);
-
-
-/*!
-    @brief Scans argument in full form (--encode)
-
-    @param flags [out] Array with flags
-    @param remainToScan [in] Number of arguments that were'nt already scanned
-    @param argv [in] Current argv position
-
-    @return Number of arguments remained to scan. Can return int < 0, is something goes wrong
-
-    Counts current argument as processed only after next argument was processed by scanToFlag() function
-*/
-int scanFullArgument(argVal_t flags[], int remainToScan, char *argv[]); // TODO: Why export it?
-
-
-/*!
-    @brief Scans argument in short form (-eio)
-
-    @param flags [out] Array with flags
-    @param remainToScan [in] Number of arguments that weren't already scanned
-    @param argv [in] Current argv position
-
-    @return Number of arguments remained to scan. Can return int < 0, is something goes wrong
-
-    Counts current argument as processed only after all next argument were processed by scanToFlag() function
-
-*/
-int scanShortArguments(argVal_t flags[], int remainToScan, char *argv[]);
-
-
-/*!
-    @brief Scans value to flag
-
-    @param flag [out] Flag to write value
-    @param remainToScan Number of arguments that weren't scanned
-    @param argv [in] Current argv position
-
-    @return Number of arguments remained to scan. Can return int < 0, is something goes wrong
-
-    Decreases remainToScan by number of elements it processed (typically 0 or 1)
-
-    argv must point to value, that should be scanned to flag
-*/
-int scanToFlag(argVal_t* flag, int remainToScan, char *argv[]);
 
 
 /*!

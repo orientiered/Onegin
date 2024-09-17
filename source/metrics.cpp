@@ -11,16 +11,15 @@
 #include "metrics.h"
 #include "oneginIO.h"
 
-doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp, pthread_t *plotThread) {
+doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
     struct stat stBuf = {};
     if (stat("statistics", &stBuf) == -1)
-        system("mkdir statistics"); // TODO: mkdir -p
-    FILE *graph = fopen("statistics/sortGraph.py", "wb");
-    fprintf(graph,  "import matplotlib.pyplot as plt\n"
-                    "data = []\n");
+        system("mkdir statistics");
+    FILE *sortTimesFile = fopen("statistics/data.txt", "wb");
 
     clock_t startTime = 0, endTime = 0;
     clock_t totalTime = 0;
+    sortFunc(onegin.text, onegin.textLen, sizeof(*onegin.text), ullCmp); //restoring original state
     char **textCopy = (char**) calloc(onegin.textLen, sizeof(char*));
     memcpy(textCopy, onegin.text, onegin.textLen * sizeof(char*));
 
@@ -31,34 +30,43 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
         startTime = clock();
         sortFunc(onegin.text, onegin.textLen, sizeof(char*), cmp);
         endTime = clock();
-        runningSTD(endTime - startTime, 0);
-        fprintf(graph, "data.append(%f)\n", double(endTime-startTime) / CLOCKS_PER_SEC * 1000);
+        runningSTD(double(endTime - startTime), 0);
+        fprintf(sortTimesFile, "%.3f\n", double(endTime-startTime) / CLOCKS_PER_SEC * 1000);
         DBG_PRINTF(">>sortTime %3.3f\n", double(endTime - startTime) / CLOCKS_PER_SEC * 1000);
         memcpy(onegin.text, textCopy, onegin.textLen * sizeof(char*));
         totalTime += clock() - startTime;
         percentageBar(test+1, testNumber, 15, totalTime);
     }
+    fclose(sortTimesFile);
     //returning average time in microseconds
     doublePair_t result = runningSTD(0, 1);
     result.first  *= 1000.0*1000/CLOCKS_PER_SEC;
     result.second *= 1000.0*1000/CLOCKS_PER_SEC;
     free(textCopy);
 
-    fprintf(graph,  "plt.plot(data, 'o')\n"
-                    "plt.plot([%f]*len(data))\n"
-                    "plt.xlabel(\"Test number\")\n"
-                    "plt.ylabel(\"Test time, ms\")\n"
-                    "plt.grid()\n"
-                    //"plt.gca().set_ylim(bottom=0)\n"
-                    "plt.show()\n", result.first / 1000);
-    fclose(graph);
-    pthread_create(plotThread, NULL, plotGraph, NULL);
     printf("\n\n");
+    printf("Average sorting time is %.3f+-%.3f ms\n", result.first / 1000, result.second / 1000);
     printf("Testing took %3.2f s\n", double(totalTime) / CLOCKS_PER_SEC);
     return result;
 }
 
-void *plotGraph(void *arg) {
+void plotSortTimeGraph() {
+    struct stat stBuf = {};
+    if (stat("statistics/data.txt", &stBuf) == -1) {
+        fprintf(stderr, "There's no info to plot the graph\n");
+        return;
+    }
+    FILE *graph = fopen("statistics/sortGraph.py", "wb");
+    fprintf(graph,  "import matplotlib.pyplot as plt\n"
+                    "fdata = open(\"statistics/data.txt\")\n"
+                    "data = list(map(float, fdata.readlines()))\n"
+                    "plt.plot(data, 'o')\n"
+                    "plt.plot([sum(data)/len(data)]*len(data))\n"
+                    "plt.xlabel(\"Test number\")\n"
+                    "plt.ylabel(\"Test time, ms\")\n"
+                    "plt.grid()\n"
+                    "plt.show()\n");
+    fclose(graph);
+
     system("python3 statistics/sortGraph.py");
-    return NULL;
 }
