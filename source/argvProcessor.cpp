@@ -18,7 +18,7 @@
 
     Counts current argument as processed only after next argument was processed by scanToFlag() function
 */
-static int scanFullArgument(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]);
+static int scanFullArgument(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]);
 
 /*!
     @brief Scans argument in short form (-eio)
@@ -32,7 +32,7 @@ static int scanFullArgument(FlagDescHolder_t desc, FlagsHolder_t *flags, int rem
     Counts current argument as processed only after all next argument were processed by scanToFlag() function
 
 */
-static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]);
+static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]);
 
 /*!
     @brief Scan value to flag
@@ -47,12 +47,12 @@ static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int r
 
     argv must point to value, that should be scanned to flag
 */
-static int scanToFlag(flagDescriptor_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]);
+static int scanToFlag(flagDescriptor_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]);
 
 static flagVal_t *findFlag(FlagsHolder_t flags, const char *flagName);
 static enum status addFlag(FlagsHolder_t *flags, flagDescriptor desc, fVal_t val);
 
-enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, char *argv[]) {
+enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, const char *argv[]) {
     flags->flags = (flagVal_t*) calloc (FLAGS_RESERVED, sizeof(flagVal_t));
     flags->reserved = FLAGS_RESERVED;
 
@@ -70,6 +70,7 @@ enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, c
 
         if (remainToScan < 0) { //remainToScan < 0 is universal error code
             deleteFlags(flags);
+            fprintf(stderr, "Wrong flags format\n");
             return ERROR;
         }
         i  = argc - remainToScan; //moving to next arguments
@@ -77,18 +78,18 @@ enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, c
     return SUCCESS;
 }
 
-static int scanFullArgument(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]) {
-    for (int flagIndex = 0; flagIndex < desc.size; flagIndex++) {        //just iterating over all flags
+static int scanFullArgument(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]) {
+    for (size_t flagIndex = 0; flagIndex < desc.size; flagIndex++) {        //just iterating over all flags
         if (strcmp(argv[0], desc.args[flagIndex].flagFullName) != 0) continue;
         return scanToFlag(desc.args[flagIndex], flags, remainToScan, argv + 1) - 1;   //we pass remainToScan forward
     }                                                                   //but scanToFlag reads flag argument, so argv+1
     return -1;                                                          //-1 because we read argv flag
 }
 
-static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]) {
-    for (char *shortName = argv[0]+1; (*shortName != '\0') && (remainToScan > 0); shortName++) { //iterating over short flags string
+static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]) {
+    for (const char *shortName = argv[0]+1; (*shortName != '\0') && (remainToScan > 0); shortName++) { //iterating over short flags string
         bool scannedArg = false;
-        for (int flagIndex = 0; flagIndex < desc.size; flagIndex++) {
+        for (size_t flagIndex = 0; flagIndex < desc.size; flagIndex++) {
             if (*shortName != desc.args[flagIndex].flagShortName[1]) continue;
             scannedArg = true;
 
@@ -102,12 +103,14 @@ static int scanShortArguments(FlagDescHolder_t desc, FlagsHolder_t *flags, int r
     return remainToScan-1; //scanned current argv -> -1
 }
 
-static int scanToFlag(flagDescriptor_t desc, FlagsHolder_t *flags, int remainToScan, char *argv[]) {
+static int scanToFlag(flagDescriptor_t desc, FlagsHolder_t *flags, int remainToScan, const char *argv[]) {
     fVal_t val = {};
 
     if (desc.type != TYPE_BLANK) {
-        if (--remainToScan <= 0)
+        if (--remainToScan <= 0) {
+            fprintf(stderr, "Expected to get parameter for flag %s, but failed\n", desc.flagFullName);
             return remainToScan;
+        }
         switch(desc.type) {
         case TYPE_INT:
             sscanf(argv[0], "%d", &val.int_);

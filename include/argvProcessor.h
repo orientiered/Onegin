@@ -51,7 +51,7 @@ typedef struct FlagDescHolder {
     @return SUCCESS if parsed correctly, ERROR otherwise
 
 */
-enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, char *argv[]);
+enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, const char *argv[]);
 
 /*!
     @brief Prints help message containing descriptions of all flags

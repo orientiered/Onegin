@@ -6,6 +6,21 @@
 
 #include "colors.h"
 
+
+/*!
+    @brief Propagate error and run custom instructions before returns
+
+*/
+#define USER_ERROR(expr, ...)           \
+    do {                                \
+        enum status res = (expr);       \
+        if (res != SUCCESS) {           \
+            { __VA_ARGS__; }            \
+            return res;                 \
+        }                               \
+    } while(0)
+
+
 /*!
     @brief Propagate error
 
@@ -15,16 +30,15 @@
     Then it will return expr <br>
     Prints to stderr
 */
-#define PROPAGATE_ERROR(expr)                                                                                           \
-        do{                                                                                                             \
-            enum status res = expr;                                                                                      \
-            if (res != SUCCESS)                                                                         \
-            {                                                                                                           \
-                fprintf(stderr, "Error. File: %s, function: %s, line: %d\n", __FILE__, __FUNCTION__, __LINE__);         \
-                return res;                                                                                            \
-            }                                                                                                           \
+#define PROPAGATE_ERROR(expr)                                                                                               \
+        do{                                                                                                                 \
+            enum status res = (expr);                                                                                         \
+            if (res != SUCCESS)                                                                                             \
+            {                                                                                                               \
+                /*fprintf(stderr, "Error. File: %s, function: %s, line: %d\n", __FILE__, __FUNCTION__, __LINE__);*/         \
+                return res;                                                                                                 \
+            }                                                                                                               \
         }while(0)
-
 
 /*!
     @brief Assert with custom behaviour
@@ -37,7 +51,7 @@
     Will run all commands after expression <br>
     You can deactivate assert by defining NDEBUG
 */
-//#define NDEBUG
+
 
 #ifndef NDEBUG
 #define MY_ASSERT(expr, ...)                                                                                                    \

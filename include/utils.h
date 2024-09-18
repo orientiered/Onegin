@@ -3,7 +3,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define FREE(p) free(p); p = NULL;
+#define FREE(p) {free(p); p = NULL;}
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
+
 typedef struct doublePair {
     double first;
     double second;

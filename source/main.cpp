@@ -2,33 +2,20 @@
 #include <stdlib.h>
 #define DEBUG_PRINTS
 #include "error_debug.h"
-#include "mystring.h"
 #include "utils.h"
+#include "mystring.h"
 #include "argvProcessor.h"
-#include "onegin.h"
 #include "sorters.h"
-#include "metrics.h"
+#include "onegin.h"
 #include "oneginIO.h"
+#include "metrics.h"
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof(*(array)))
-void checkNULLStrings(text_t text);
-int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp);
-enum status getOutputFile(FlagsHolder_t flags, FILE **outFile);
-void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp);
-void closeAndFreeAll(text_t *onegin, FlagsHolder_t *flags, FILE* outFile);
+#include "main.h"
 
 
-int main(int argc, char *argv[]) { //TODO: const char *argv[]
-    flagDescriptor_t args[] = {
-    {TYPE_STRING,   "-i",   "--input",      "Next argument is name of input file"},
-    {TYPE_STRING,   "-o",   "--output",     "Next argument is name of output file"},
-    {TYPE_BLANK,    "-t",   "--time",       "Prints average time to sort file"},
-    {TYPE_BLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},
-    {TYPE_STRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm\n"
-                                            "Available algs: bubble, insertion, shell, qsort"},
-    {TYPE_BLANK,    "-h",   "--help",       "Prints help message"}
-    };
-    FlagDescHolder flagsDescriptions = {args, ARRAY_SIZE(args)};
+int main(int argc, const char *argv[]) {
+// TODO: log file status time position
+// no bufferization
     FlagsHolder_t flags = {};
     PROPAGATE_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
     if (isFlagSet(flags, "-h")) {
@@ -40,16 +27,16 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     const char *fileName = "OneginText.txt"; // TODO: get_argument_or_default
     if (isFlagSet(flags, "-i"))
         fileName = getFlagValue(flags, "-i").string_;
-    PROPAGATE_ERROR(readTextFromFile(fileName, &onegin));
+    USER_ERROR(readTextFromFile(fileName, &onegin), deleteFlags(&flags));
 
     FILE *outFile = stdout;
-    PROPAGATE_ERROR(getOutputFile(flags, &outFile));
+    USER_ERROR(getOutputFile(flags, &outFile), {deleteFlags(&flags); deleteText(&onegin);});
 
     cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackward , ullCmp};
     sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //qsort by default
 
     for (size_t cmpIndex = 0; cmpIndex < ARRAY_SIZE(cmpFuncs); cmpIndex++) {
-        sortFunc(onegin.text, onegin.textLen, sizeof(char*), cmpFuncs[cmpIndex]);
+        sortFunc(onegin.lines, onegin.size, sizeof(char*), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG
         if (checkIsSorted(onegin, cmpFuncs[cmpIndex]))
             printf("Sort doesn't work\n");
@@ -64,24 +51,23 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
     return 0;
 }
 
+int checkIsSorted(text_t text, cmpFuncPtr_t cmp) {
+    int notSorted = 0;
+    for (size_t i = 0; i < text.size-1; i++) {
+        if (cmp(text.lines + i, text.lines + i + 1) > 0) {
+            DBG_PRINTF("i = %lu\n%s\n%s\n", i, *(text.lines + i), *(text.lines + i + 1));
+            notSorted = 1;
+        }
+    }
+    return notSorted;
+}
+
 void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
     if (isFlagSet(flags, "-t")) {
         sortTimeTest(50, onegin, sortFunc, cmp);
         if (isFlagSet(flags, "-g"))
             plotSortTimeGraph();
     }
-}
-
-int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
-    //printf("Checking array\n");
-    int notSorted = 0;
-    for (size_t i = 0; i < textInfo.textLen-1; i++) {
-        if (cmp(textInfo.text + i, textInfo.text + i + 1) > 0) {
-            DBG_PRINTF("i = %lu\n%s\n%s\n", i, *(textInfo.text + i), *(textInfo.text + i + 1));
-            notSorted = 1;
-        }
-    }
-    return notSorted;
 }
 
 enum status getOutputFile(FlagsHolder_t flags, FILE **outFile) {
