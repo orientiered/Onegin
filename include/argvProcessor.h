@@ -4,90 +4,66 @@
 #ifndef ARGV_PROCESSOR_H
 #define ARGV_PROCESSOR_H
 
+const size_t FLAGS_RESERVED = 10;
 /// @brief Enum with available types for cmd args
-enum argType {
-    tBLANK = 0,     ///< Doesn't expect next argument
-    tINT,           ///< Next argument is integer
-    tFLOAT,         ///< Next argument is double
-    tSTRING,        ///< Next argument is string(char*)
+enum flagType {
+    TYPE_BLANK = 0,     ///< Doesn't expect next argument
+    TYPE_INT,           ///< Next argument is integer
+    TYPE_FLOAT,         ///< Next argument is double
+    TYPE_STRING,        ///< Next argument is string(char*)
 };
 
 
 /// @brief Struct to describe cmd arguments
-typedef struct argDescriptor {
-    enum argType type;          ///< Expected type of data
-    const char *argShortName;   ///< Short name (-e)
-    const char *argFullName;    ///< Full name (--encode)
-    const char *argHelp;        ///< Message to print in help call
-} argDescriptor_t;
+typedef struct flagDescriptor {
+    enum flagType type;          ///< Expected type of data
+    const char *flagShortName;   ///< Short name (-e)
+    const char *flagFullName;    ///< Full name (--encode)
+    const char *flagHelp;        ///< Message to print in help call
+} flagDescriptor_t;
 
+typedef union {
+    int int_;
+    double float_;
+    char *string_;
+} fVal_t;
 
 /// @brief Struct with argument parameters
-typedef struct argVal {
-    int set;                    ///< Indicates if argument is activated
-    enum argType type;          ///< Data type which argument stores
-    union {                     ///< Union with available types
-        int _int;
-        double _float; // TODO: reserved name for linker, use "<name>_"
-        const char *_string;
-        char **_arrayPtr;
-    } val;
-} argVal_t;
+typedef struct flagVal {
+    flagDescriptor_t desc;          ///< Flag description
+    fVal_t val;
+} flagVal_t;
 
+typedef struct FlagsHolder {
+    flagVal_t *flags;
+    size_t size;
+    size_t reserved;
+} FlagsHolder_t;
 
-/// @brief Enum to easily find needed flag
-enum argNamesEnum { // TODO: come up with a way to reuse your arg parsing library
-    INPUT,
-    OUTPUT,
-    SORT_TIME,
-    SORT_GRAPH,
-    SORT_ALG,
-    HELP
-};
-
-
-/// @brief Global array with descriptions of all available arguments
-const argDescriptor_t args[] { // TODO: cringe, global variable
-    {tSTRING,   "-i",   "--input",      "Next argument is name of input file"},
-    {tSTRING,   "-o",   "--output",     "Next argument is name of output file"},
-    {tBLANK,    "-t",   "--time",       "Prints average time to sort file"},
-    {tBLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},
-    {tSTRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm\n"
-                                        "Available algs: bubble, insertion, shell, qsort"},
-    {tBLANK,    "-h",   "--help",       "Prints help message"}
-};
-
-const size_t argsSize = sizeof(args)/sizeof(argDescriptor_t);
-
+typedef struct FlagDescHolder {
+    flagDescriptor_t *args;
+    size_t size;
+} FlagDescHolder_t;
 
 /*!
-    @brief Function to process cmd args
+    @brief Parse cmd args
 
-    @param flags [out] Array of flags, where parsed data will be written
-    @param argc  [in] Number of arguments
-    @param argv  [in] Array of arguments
+    @return SUCCESS if parsed correctly, ERROR otherwise
 
-    @return GOOD_EXIT if parsed correctly, BAD_EXIT otherwise
-
-    Uses global constant array of arguments args and it's size argsSize
 */
-enum error processArgs(argVal_t flags[], int argc, char *argv[]);
-
-
-/*!
-    @brief Puts zero's in every flag in given array
-
-    @param flags [out] Array of flags
-
-    Deactivates all flags, sets types to flags from global args array, puts zero in val field
-*/
-void initFlags(argVal_t flags[]);
-
+enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, char *argv[]);
 
 /*!
     @brief Prints help message containing descriptions of all flags
 
     Prints all argHelps in args array
 */
-void printHelpMessage();
+void printHelpMessage(FlagDescHolder_t desc);
+
+bool isFlagSet(const FlagsHolder_t flags, const char *flagName);
+
+fVal_t getFlagValue(const FlagsHolder_t flags, const char *flagName);
+
+void deleteFlags(FlagsHolder_t *flags);
+
 #endif

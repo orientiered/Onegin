@@ -3,6 +3,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#define FREE(p) free(p); p = NULL;
 typedef struct doublePair {
     double first;
     double second;

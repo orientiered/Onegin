@@ -10,71 +10,45 @@
 #include "metrics.h"
 #include "oneginIO.h"
 
-
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(*(array)))
 void checkNULLStrings(text_t text);
 int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp);
-void test();
-
-// TODO: make main look less like yours and more like this:
-//
-// parsed_args = parse_args(args, argc, argv);
-// if (fignya...(parsed_args))
-//     return EXIT_FAILURE;
-//
-//  input_file = get_argument_or_default(parsed, args, "--input", "onegin.txt");
-// output_file = get_argument(parsed, args, "--output");
-//
-// propagate_error(text = read_text(input_file))
-//
-// sort(text, lexicographical)
-// propagate_error(print(text, output_file))
-//
-// sort(text, lexicographical_reversed)
-// propagate_error(print(text, output_file))
-//
-// restore_original(text)
-// propagate_error(print(text, output_file))
+enum status getOutputFile(FlagsHolder_t flags, FILE **outFile);
+void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp);
+void closeAndFreeAll(text_t *onegin, FlagsHolder_t *flags, FILE* outFile);
 
 
 int main(int argc, char *argv[]) { //TODO: const char *argv[]
-    test();
-    argVal_t flags[argsSize] = {};
-    initFlags(flags);
-    processArgs(flags, argc, argv);
-
-    if (flags[HELP].set) {
-        printHelpMessage();
+    flagDescriptor_t args[] = {
+    {TYPE_STRING,   "-i",   "--input",      "Next argument is name of input file"},
+    {TYPE_STRING,   "-o",   "--output",     "Next argument is name of output file"},
+    {TYPE_BLANK,    "-t",   "--time",       "Prints average time to sort file"},
+    {TYPE_BLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},
+    {TYPE_STRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm\n"
+                                            "Available algs: bubble, insertion, shell, qsort"},
+    {TYPE_BLANK,    "-h",   "--help",       "Prints help message"}
+    };
+    FlagDescHolder flagsDescriptions = {args, ARRAY_SIZE(args)};
+    FlagsHolder_t flags = {};
+    PROPAGATE_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
+    if (isFlagSet(flags, "-h")) {
+        printHelpMessage(flagsDescriptions);
         return 0;
     }
 
     text_t onegin = {};
-
     const char *fileName = "OneginText.txt"; // TODO: get_argument_or_default
-    if (flags[INPUT].set)
-        fileName = flags[INPUT].val._string;
+    if (isFlagSet(flags, "-i"))
+        fileName = getFlagValue(flags, "-i").string_;
+    PROPAGATE_ERROR(readTextFromFile(fileName, &onegin));
 
-    if (readTextFromFile(fileName, &onegin) != GOOD_EXIT) { // TODO: is_success(...)?
-        fprintf(stderr, "Can't read from file\n");
-        return 0;
-    }
-
-    MY_ASSERT((checkNULLStrings(onegin), true), ;); //searches for NULL strings in text
     FILE *outFile = stdout;
-    if (flags[OUTPUT].set)
-        outFile = fopen(flags[OUTPUT].val._string, "wb");
-    if (!outFile) {
-        fprintf(stderr, "Can't open output file\n");
-        return 0;
-    }
+    PROPAGATE_ERROR(getOutputFile(flags, &outFile));
 
-    sortFuncPtr_t sortFunc = quickSort;
     cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackward , ullCmp};
+    sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //qsort by default
 
-    if (flags[SORT_ALG].set)
-        sortFunc = chooseSortFunction(flags[SORT_ALG].val._string);
-
-    // TODO: ARRAY_SIZE macro? ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
-    for (size_t cmpIndex = 0; cmpIndex < sizeof(cmpFuncs)/sizeof(cmpFuncPtr_t); cmpIndex++) {
+    for (size_t cmpIndex = 0; cmpIndex < ARRAY_SIZE(cmpFuncs); cmpIndex++) {
         sortFunc(onegin.text, onegin.textLen, sizeof(char*), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG
         if (checkIsSorted(onegin, cmpFuncs[cmpIndex]))
@@ -82,22 +56,21 @@ int main(int argc, char *argv[]) { //TODO: const char *argv[]
         #endif
         writeTextToFile(onegin, outFile); //forward sorting
         DBG_PRINTF("%lu write\n", cmpIndex + 1);
-
     }
 
-    if (flags[SORT_TIME].set)
-        sortTimeTest(50, onegin, sortFunc, cmpFuncs[0]);
-    if (flags[SORT_GRAPH].set)
-        plotSortTimeGraph();
-
-    deleteText(&onegin);
-
-    if (outFile && outFile != stdout)
-        fclose(outFile);
+    testSortingFunction(flags, onegin, sortFunc, cmpFuncs[0]); //only with -t flag
+    closeAndFreeAll(&onegin, &flags, outFile);
 
     return 0;
 }
 
+void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
+    if (isFlagSet(flags, "-t")) {
+        sortTimeTest(50, onegin, sortFunc, cmp);
+        if (isFlagSet(flags, "-g"))
+            plotSortTimeGraph();
+    }
+}
 
 int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
     //printf("Checking array\n");
@@ -111,23 +84,32 @@ int checkIsSorted(text_t textInfo, cmpFuncPtr_t cmp) {
     return notSorted;
 }
 
-void checkNULLStrings(text_t text) {
-    //debug function to detect broken text
-    for (size_t i = 0; i < text.textLen; i++) {
-        if (!text.text[i]) {
-            fprintf(stderr, "NULL STRING: %lu index, len %lu\n", i, text.textLen);
-        }
+enum status getOutputFile(FlagsHolder_t flags, FILE **outFile) {
+    if (isFlagSet(flags, "-o"))
+        *outFile = fopen(getFlagValue(flags, "-o").string_, "wb");
+    if (!*outFile) {
+        fprintf(stderr, "Can't open output file\n");
+        return ERROR;
     }
+    return SUCCESS;
 }
 
-void test() {
-    unsigned long long *data = (unsigned long long*) calloc(1000, sizeof(unsigned long long));
-    for (int i = 0; i < 1000; i++) data[i] = abs((rand() % 1000) * 1000);
-    quickSort(data, 1000, sizeof(unsigned long long), ullCmp);
-    for (size_t i = 0; i < 1000 - 1; i++) {
-        if (ullCmp(&data[i], &data[i+1]) > 0) {
-            DBG_PRINTF("i = %lu\n%llu\n%llu\n", i, data[i], data[i+1]);
-        }
-    }
-    free(data);
+void closeAndFreeAll(text_t *onegin, FlagsHolder_t *flags, FILE* outFile) {
+    deleteText(onegin);
+    deleteFlags(flags);
+    if (outFile && outFile != stdout)
+        fclose(outFile);
 }
+
+
+// void test() {
+//     unsigned long long *data = (unsigned long long*) calloc(1000, sizeof(unsigned long long));
+//     for (int i = 0; i < 1000; i++) data[i] = abs((rand() % 1000) * 1000);
+//     quickSort(data, 1000, sizeof(unsigned long long), ullCmp);
+//     for (size_t i = 0; i < 1000 - 1; i++) {
+//         if (ullCmp(&data[i], &data[i+1]) > 0) {
+//             DBG_PRINTF("i = %lu\n%llu\n%llu\n", i, data[i], data[i+1]);
+//         }
+//     }
+//     free(data);
+// }

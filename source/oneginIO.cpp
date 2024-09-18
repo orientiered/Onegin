@@ -8,18 +8,21 @@
 #include "error_debug.h"
 #include "oneginIO.h"
 
-enum error readTextFromFile(const char* fileName, text_t *textInfo) {
+enum status readTextFromFile(const char* fileName, text_t *textInfo) {
     textInfo->dataLen = getFileSize(fileName);
     DBG_PRINTF("File size: %lu\n", textInfo->dataLen);
     FILE *textFile = fopen(fileName, "rb");
-    if (!textFile) return FAIL;
-
+    if (!textFile) {
+        fprintf(stderr, "Can't open file\n");
+        return ERROR;
+    }
     char *data = (char*) calloc(textInfo->dataLen + 1, sizeof(char));
     textInfo->data = data;
     DBG_PRINTF("Data pointer: %p\n", data);
     if (!data) {
         fclose(textFile);
-        return BAD_EXIT;
+        fprintf(stderr, "Can't alloc memory\n");
+        return ERROR;
     }
 
     textInfo->dataLen = fread(data, sizeof(char), textInfo->dataLen, textFile);
@@ -30,7 +33,7 @@ enum error readTextFromFile(const char* fileName, text_t *textInfo) {
     splittedStringToArray(textInfo); //making array with pointers to start of the string
 
     fclose(textFile);
-    return GOOD_EXIT;
+    return SUCCESS;
 }
 
 void writeTextToFile(text_t textInfo, FILE *file) {

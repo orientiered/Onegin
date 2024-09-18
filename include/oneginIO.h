@@ -9,9 +9,9 @@
 
     @param fileName [in] Name of file
 
-    @return BAD_EXIT or FAIL if something went wrong, GOOD_EXIT otherwise
+    @return ERROR or FAIL if something went wrong, SUCCESS otherwise
 */
-enum error readTextFromFile(const char* fileName, text_t *textInfo);
+enum status readTextFromFile(const char* fileName, text_t *textInfo);
 
 /*!
     @brief Prints strings from array of strings

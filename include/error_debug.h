@@ -7,19 +7,18 @@
 #include "colors.h"
 
 /*!
-  // TODO: A better doc would be: «Propagate error»
     @brief Propagate error
 
-    @param[in] expr Expression of type enum error
+    @param[in] expr Expression of type enum status
 
-    If expr is BAD_EXIT or FAIL, macro will print file, function and line where expression ocurred <br>
+    If expr is ERROR or FAIL, macro will print file, function and line where expression ocurred <br>
     Then it will return expr <br>
     Prints to stderr
 */
 #define PROPAGATE_ERROR(expr)                                                                                           \
         do{                                                                                                             \
-            enum error res = expr;                                                                                      \
-            if (res == BAD_EXIT || res == FAIL)                                                                         \
+            enum status res = expr;                                                                                      \
+            if (res != SUCCESS)                                                                         \
             {                                                                                                           \
                 fprintf(stderr, "Error. File: %s, function: %s, line: %d\n", __FILE__, __FUNCTION__, __LINE__);         \
                 return res;                                                                                            \
@@ -82,12 +81,11 @@
 #define DBG_STR(str, size)
 #endif
 /// @brief Error codes which can be used in many functions
-enum error { // TODO: no good errors ever, it's «status», not «error»
-    GOOD_EXIT = 0,      ///< Function worked correctly and all is as expected // TODO: Why _EXIT? SUCCESS?
-    BAD_EXIT,           ///< Function handled fail inside it correctly // TODO: how queer
-    STRANGE_EXIT,       ///< Exit in conditions that can't be reached // TODO: I would like a thorough explanation on how that happens...
-    FAIL,               ///< Emergency exit
-    BLANK               ///< Empty error // TODO: empty??
+enum status {
+    SUCCESS = 0,        ///< Success
+    ERROR,              ///< Some type of error occurred
+    LOGIC_ERROR,        ///< Return from wrong place in function
+    EMPTY_STATUS        ///< Empty error
 };
 
 #endif
