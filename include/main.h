@@ -7,7 +7,7 @@ static flagDescriptor_t args[] = {
     {TYPE_BLANK,    "-t",   "--time",       "Prints average time to sort file"},
     {TYPE_BLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},
     {TYPE_STRING,   "-s",   "--sort",       "Next argument is name of sorting algorithm\n"
-                                            "Available algs: bubble, insertion, shell, qsort"},
+                                            "Available algs: bubble, insertion, shell, qsort, cqsort"},
     {TYPE_BLANK,    "-h",   "--help",       "Prints help message"}
     };
 FlagDescHolder_t flagsDescriptions = {args, ARRAY_SIZE(args)};

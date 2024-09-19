@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+//#define DEBUG_PRINTS
+#include "error_debug.h"
 #include "sorters.h"
 #include "mystring.h"
 #include "utils.h"
-
-//#define DEBUG_PRINTS
-#include "error_debug.h"
+#include "onegin.h"
 
 static void insertionSortBase(void *array, size_t elemSize, size_t alignment, size_t length, cmpFuncPtr_t cmp);
 static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
@@ -71,17 +72,21 @@ static void insertionSortBase(void *array, size_t elemSize, size_t alignment, si
     }
 }
 
-#define GET_ELEM(array, i) (char *) (array) + elemSize * (i)
+#define GET_ELEM(array, i) ((char *) (array) + elemSize * (i))
 
 void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     DBG_PRINTF("length = %ld\n", length);
     MY_ASSERT(array, return);
-    if (length <= 1) return;
-    if (length == 2) { // TODO: small array?
-        if (cmp(array, (char*) array + elemSize) > 0)
-            swap(array, (char*) array + elemSize, elemSize);
+    if (length <= 15) {
+        shellSort(array, length, elemSize, cmp);
         return;
     }
+    // if (length <= 1) return;
+    // if (length == 2) { // TODO: small array?
+    //     if (cmp(array, (char*) array + elemSize) > 0)
+    //         swap(array, (char*) array + elemSize, elemSize);
+    //     return;
+    // }
 
     char *pivot = GET_ELEM(array, length / 2);
     llPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
@@ -104,8 +109,8 @@ static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, 
     // <=> - elements <=> pivot(left);
     // . - elements, that are not partitioned yet
     char    *left  = GET_ELEM(array, 0),
-            *head  = GET_ELEM(array, 1), // TODO: get_array_element(array, elemSize, 1) // custom [] // struct pointer {}...
-            *right = GET_ELEM(array, length-1); // TODO: right + 1?
+            *head  = GET_ELEM(array, 1),
+            *right = GET_ELEM(array, length-1);
     int cmpResult = 0;
     while (head <= right) {
         cmpResult = cmp(left, head);
@@ -166,45 +171,97 @@ int ullCmp(const void* first, const void* second) {
 int stringArrCmp(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return strcmp(*(char * const *)firstStr, *(char * const *)secondStr);
+    return strcmp(((const string_t *)firstStr)->str, ((const string_t *)secondStr)->str);
 }
 
 int stringArrAlphaCmp(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return stralphacmp(*(char * const *)firstStr, *(char * const *)secondStr);
+    return stralphacmp(((const string_t *)firstStr)->str, ((const string_t *)secondStr)->str);
 }
 
 int stringArrCmpBackward(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return strcmpBackward(*(char * const *)firstStr, *(char * const *)secondStr);
+    return strcmpBackward(((const string_t *)firstStr)->str, ((const string_t *)secondStr)->str);
+}
+
+int stringArrCmpBackwardFast(const void *firstStr, const void *secondStr) { //relies on text_t structure
+    MY_ASSERT(firstStr, return 0);
+    MY_ASSERT(secondStr, return 0);
+    const string_t  firstStrT = *(const string_t *) firstStr,
+                    secondStrT = *(const string_t *) secondStr;
+    const char  *fStart = firstStrT.str,
+                *sStart = secondStrT.str;
+    const char  *fStr = firstStrT.str + ((firstStrT.size > 0) ? firstStrT.size - 1 : 0),
+                *sStr = secondStrT.str + ((secondStrT.size > 0) ? secondStrT.size - 1 : 0);
+
+    for (; (fStr > fStart) && (sStr > sStart) && (*fStr == *sStr); fStr--, sStr--)
+        ;
+    if ((*fStr == *sStr) && ((fStr == fStart) ^ (sStr == sStart)))
+        return int(fStr - fStart) - int(sStr - sStart);
+    return int(*fStr) - int(*sStr);
 }
 
 int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr) {
     MY_ASSERT(firstStr, return 0);
     MY_ASSERT(secondStr, return 0);
-    return stralphacmpBackward(*(char * const *)firstStr, *(char * const *)secondStr);
+    return stralphacmpBackward(((const string_t *)firstStr)->str, ((const string_t *)secondStr)->str);
 }
+
+int stringArrAlphaCmpBackwardFast(const void *firstStr, const void *secondStr) {
+    MY_ASSERT(firstStr, return 0);
+    MY_ASSERT(secondStr, return 0);
+    const string_t  firstStrT = *(const string_t *) firstStr,
+                    secondStrT = *(const string_t *) secondStr;
+    const char  *fStart = firstStrT.str,
+                *sStart = secondStrT.str;
+    const char  *fStr = firstStrT.str + ((firstStrT.size > 0) ? firstStrT.size - 1 : 0),
+                *sStr = secondStrT.str + ((secondStrT.size > 0) ? secondStrT.size - 1 : 0);
+
+    while (fStr > fStart && sStr > sStart) {
+        fStr = findAlphabetCharBackward(fStr, fStart);
+        sStr = findAlphabetCharBackward(sStr, sStart);
+        if (tolower(*fStr) != tolower(*sStr))
+            return tolower(*fStr) - tolower(*sStr);
+        if (fStr > fStart) fStr--;
+        if (sStr > sStart) sStr--;
+    }
+    fStr = findAlphabetCharBackward(fStr, fStart);
+    sStr = findAlphabetCharBackward(sStr, sStart);
+    if ((tolower(*fStr) == tolower(*sStr)) && ((fStr == fStart) ^ (sStr == sStart)))
+        return int(fStr - fStart) - int(sStr - sStart);
+    return tolower(*fStr) - tolower(*sStr);
+}
+
+
 
 sortFuncPtr_t chooseSortFunction(const char *sortName) {
     //choose sort function based on it's name
-    const sortFuncPtr_t sortFunctions[] = {
-        bubbleSort, insertionSort, shellSort, quickSort};
-    const char *sortNames[] = {
-        "bubble",   "insertion",   "shell",   "qsort"};
-    const unsigned sortFunctionsLen = sizeof(sortFunctions)/sizeof(sortFuncPtr_t);
-    const unsigned defaultSortIndex = 3; //qsort
+    typedef struct {
+        sortFuncPtr_t sortFunc;
+        const char *sortName;
+    } sortFuncAndName_t;
+    const sortFuncAndName_t sortFunctions[] = {
+        {bubbleSort,    "bubble"},
+        {insertionSort, "insertion"},
+        {shellSort,     "shell"},
+        {quickSort,     "qsort"},
+        {qsort,         "cqsort"}
+    };
+    const unsigned len = ARRAY_SIZE(sortFunctions);
+
+    const unsigned defaultSort = 3; //qsort
 
     if (!sortName) {
-        printf("Using default sort function: %s\n", sortNames[defaultSortIndex]);
-        return sortFunctions[defaultSortIndex];
+        printf("Using default sort function: %s\n", sortFunctions[defaultSort].sortName);
+        return sortFunctions[defaultSort].sortFunc;
     }
 
-    for (unsigned index = 0; index < sortFunctionsLen; index++)
-        if (strcmp(sortNames[index], sortName) == 0)
-            return sortFunctions[index];
+    for (unsigned index = 0; index < len; index++)
+        if (strcmp(sortFunctions[index].sortName, sortName) == 0)
+            return sortFunctions[index].sortFunc;
 
-    printf("Using default sort function: %s\n", sortNames[defaultSortIndex]);
-    return sortFunctions[defaultSortIndex];
+    printf("Using default sort function: %s\n", sortFunctions[defaultSort].sortName);
+    return sortFunctions[defaultSort].sortFunc;
 }

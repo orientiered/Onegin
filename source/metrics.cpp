@@ -42,21 +42,20 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
 
     clock_t startTime = 0, endTime = 0;
     clock_t totalTime = 0;
-    sortFunc(onegin.lines, onegin.size, sizeof(*onegin.lines), ullCmp); //restoring original state
-    char **textCopy = (char**) calloc(onegin.size, sizeof(char*));
-    memcpy(textCopy, onegin.lines, onegin.size * sizeof(char*));
+
+    restoreOriginal(&onegin);
 
     runningSTD(0, -1); //reseting runningSTD
     printf("Testing:\n");
     for (unsigned test = 0; test < testNumber; test++) {
         percentageBar(test, testNumber, PROGRESS_BAR_POINTS, totalTime);
         startTime = clock();
-        sortFunc(onegin.lines, onegin.size, sizeof(char*), cmp);
+        sortFunc(onegin.lines, onegin.size, sizeof(string_t), cmp);
         endTime = clock();
         runningSTD(double(endTime - startTime), 0);
         fprintf(sortTimesFile, "%.3f\n", double(endTime-startTime) / CLOCKS_PER_SEC * MS_PER_SEC);
         DBG_PRINTF(">>sortTime %3.3f\n", double(endTime - startTime) / CLOCKS_PER_SEC * MS_PER_SEC);
-        memcpy(onegin.lines, textCopy, onegin.size * sizeof(char*));
+        restoreOriginal(&onegin);
         totalTime += clock() - startTime;
         percentageBar(test+1, testNumber, PROGRESS_BAR_POINTS, totalTime);
     }
@@ -65,7 +64,6 @@ doublePair_t sortTimeTest(unsigned testNumber, text_t onegin, sortFuncPtr_t sort
     doublePair_t result = runningSTD(0, 1);
     result.first  *= MCS_PER_SEC / CLOCKS_PER_SEC;
     result.second *= MCS_PER_SEC / CLOCKS_PER_SEC;
-    free(textCopy);
 
     printf("\n\n");
     printf("Average sorting time is %.3f+-%.3f ms\n", result.first / MCS_PER_MS, result.second / MCS_PER_MS);

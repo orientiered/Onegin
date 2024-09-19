@@ -6,6 +6,8 @@
 #include "onegin.h"
 //#define DEBUG_PRINTS
 #include "error_debug.h"
+#include "mystring.h"
+#include "utils.h"
 #include "oneginIO.h"
 
 enum status readTextFromFile(const char* fileName, text_t *textInfo) {
@@ -36,9 +38,9 @@ enum status readTextFromFile(const char* fileName, text_t *textInfo) {
     return SUCCESS;
 }
 
-void writeTextToFile(text_t textInfo, FILE *file) {
-    for (size_t rowIndex = 0; rowIndex < textInfo.size; rowIndex++) {
-        fputs(textInfo.lines[rowIndex], file);
+void writeTextToFile(string_t *lines, size_t size, FILE *file) {
+    for (size_t rowIndex = 0; rowIndex < size; rowIndex++) {
+        fputs(lines[rowIndex].str, file);
         fputc('\n', file);
     }
 }
@@ -74,24 +76,28 @@ void splitString(text_t *textInfo) {
 
 void splittedStringToArray(text_t *textInfo) {
     size_t linesCnt = textInfo->size;
-    char **strings = (char**) calloc(textInfo->size+1, sizeof(char *));
-    strings[0] = textInfo->text;
-    strings[linesCnt] = NULL;
+    string_t *strings = (string_t *) calloc(textInfo->size, sizeof(string_t));;
+    strings[0].str = textInfo->text;
 
     long long lastPos = -1; //index of last '\0' -> end of line
     for (size_t index = 0, lineIdx = 0;
          lineIdx < linesCnt && (index <= textInfo->textLen);
          index++) {
         if (textInfo->text[index] == '\0') {
-            strings[lineIdx] = textInfo->text + lastPos + 1;
+            strings[lineIdx].str = textInfo->text + lastPos + 1;
             //DBG_PRINTF("Scanned %lu line\n", lineIdx);
             lineIdx++;
             lastPos = (long long)index;
         }
     }
-    textInfo->lines = strings;
-    DBG_PRINTF("Text array pointer: %p\n", textInfo->lines);
 
+    textInfo->originalLines = strings;
+    for (size_t idx = 0; idx < textInfo->size; idx++)
+        textInfo->originalLines[idx].size = strlen(strings[idx].str);
+    textInfo->lines = (string_t *) calloc(textInfo->size, sizeof(string_t));
+    DBG_PRINTF("Lines pointers: %p %p\n", textInfo->originalLines, textInfo->lines);
+    memcpy(textInfo->lines, textInfo->originalLines, textInfo->size * sizeof(string_t));
+    DBG_PRINTF("Text array pointer: %p\n", textInfo->lines);
 }
 
 size_t getFileSize(const char *fileName) {

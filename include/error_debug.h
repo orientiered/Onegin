@@ -76,21 +76,29 @@
 */
 //#define DEBUG_PRINTS
 #ifdef DEBUG_PRINTS
+# ifndef NDEBUG
 #define DBG_PRINTF(...)                     \
     do {                                    \
         fprintf(stderr, __VA_ARGS__);       \
     } while (0)
+# else
+#define DBG_PRINTF(...)
+# endif
 #else
 #define DBG_PRINTF(...)
 #endif
 
 #ifdef DEBUG_PRINTS
+# ifndef NDEBUG
 #define DBG_STR(str, size)                                      \
     do {                                                        \
         for (int i = 0;str[i] && i < size; i++) {               \
             printf("%c(%d)", str[i], (unsigned char)str[i]);    \
         }                                                       \
     } while (0)
+# else
+#define DBG_STR(str, size)
+# endif
 #else
 #define DBG_STR(str, size)
 #endif

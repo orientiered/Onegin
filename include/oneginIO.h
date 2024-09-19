@@ -18,7 +18,7 @@ enum status readTextFromFile(const char* fileName, text_t *textInfo);
 
     @param file     [in] Stream to print strings
 */
-void writeTextToFile(text_t textInfo, FILE *file);
+void writeTextToFile(string_t *lines, size_t size, FILE *file);
 
 size_t getFileSize(const char *fileName);
 

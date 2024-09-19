@@ -42,7 +42,10 @@ int stringArrCmp(const void *firstStr, const void *secondStr);
 int stringArrAlphaCmp(const void *firstStr, const void *secondStr);
 
 int stringArrCmpBackward(const void *firstStr, const void *secondStr);
+int stringArrCmpBackwardFast(const void *firstStr, const void *secondStr);
+
 int stringArrAlphaCmpBackward(const void *firstStr, const void *secondStr);
+int stringArrAlphaCmpBackwardFast(const void *firstStr, const void *secondStr);
 
 int ullCmp(const void* first, const void* second);
 

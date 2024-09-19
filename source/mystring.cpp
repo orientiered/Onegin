@@ -128,8 +128,8 @@ char *strrchr(char *s, char c) {
 }
 
 const char* strstr(const char* text, const char* str) {
-    size_t textSize = (size_t) strlen(text);
-    size_t strSize =  (size_t) strlen(str);
+    size_t textSize = strlen(text);
+    size_t strSize =  strlen(str);
 
     if (strSize > textSize) return NULL;
 

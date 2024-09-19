@@ -20,6 +20,7 @@ int main(int argc, const char *argv[]) {
     PROPAGATE_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
     if (isFlagSet(flags, "-h")) {
         printHelpMessage(flagsDescriptions);
+        deleteFlags(&flags);
         return 0;
     }
 
@@ -28,22 +29,23 @@ int main(int argc, const char *argv[]) {
     if (isFlagSet(flags, "-i"))
         fileName = getFlagValue(flags, "-i").string_;
     USER_ERROR(readTextFromFile(fileName, &onegin), deleteFlags(&flags));
-
     FILE *outFile = stdout;
     USER_ERROR(getOutputFile(flags, &outFile), {deleteFlags(&flags); deleteText(&onegin);});
 
-    cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackward , ullCmp};
+    cmpFuncPtr_t cmpFuncs[] = {stringArrCmp, stringArrCmpBackwardFast};
     sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //qsort by default
-
+    sortFunc = qsort;
     for (size_t cmpIndex = 0; cmpIndex < ARRAY_SIZE(cmpFuncs); cmpIndex++) {
-        sortFunc(onegin.lines, onegin.size, sizeof(char*), cmpFuncs[cmpIndex]);
+        sortFunc(onegin.lines, onegin.size, sizeof(string_t), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG
         if (checkIsSorted(onegin, cmpFuncs[cmpIndex]))
             printf("Sort doesn't work\n");
         #endif
-        writeTextToFile(onegin, outFile); //forward sorting
+        writeTextToFile(onegin.lines, onegin.size, outFile); //forward sorting
         DBG_PRINTF("%lu write\n", cmpIndex + 1);
     }
+
+    writeTextToFile(onegin.originalLines, onegin.size, outFile);
 
     testSortingFunction(flags, onegin, sortFunc, cmpFuncs[0]); //only with -t flag
     closeAndFreeAll(&onegin, &flags, outFile);
@@ -55,7 +57,7 @@ int checkIsSorted(text_t text, cmpFuncPtr_t cmp) {
     int notSorted = 0;
     for (size_t i = 0; i < text.size-1; i++) {
         if (cmp(text.lines + i, text.lines + i + 1) > 0) {
-            DBG_PRINTF("i = %lu\n%s\n%s\n", i, *(text.lines + i), *(text.lines + i + 1));
+            DBG_PRINTF("i = %lu\n%s\n%s\n", i, (text.lines + i)->str, (text.lines + i + 1)->str);
             notSorted = 1;
         }
     }
@@ -63,8 +65,9 @@ int checkIsSorted(text_t text, cmpFuncPtr_t cmp) {
 }
 
 void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortFunc, cmpFuncPtr_t cmp) {
+    const int TEST_NUMBER = 50;
     if (isFlagSet(flags, "-t")) {
-        sortTimeTest(50, onegin, sortFunc, cmp);
+        sortTimeTest(TEST_NUMBER, onegin, sortFunc, cmp);
         if (isFlagSet(flags, "-g"))
             plotSortTimeGraph();
     }
