@@ -32,9 +32,9 @@ int main(int argc, const char *argv[]) {
     FILE *outFile = stdout;
     USER_ERROR(getOutputFile(flags, &outFile), {deleteFlags(&flags); deleteText(&onegin);});
 
-    cmpFuncPtr_t cmpFuncs[] = {stringArrCmp, stringArrCmpBackwardFast};
-    sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //qsort by default
-    sortFunc = qsort;
+    cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackwardFast};
+    sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //quickSort by default
+
     for (size_t cmpIndex = 0; cmpIndex < ARRAY_SIZE(cmpFuncs); cmpIndex++) {
         sortFunc(onegin.lines, onegin.size, sizeof(string_t), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG
