@@ -9,8 +9,8 @@
 #include "onegin.h"
 
 static void insertionSortBase(void *array, size_t elemSize, size_t alignment, size_t length, cmpFuncPtr_t cmp);
-static llPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
-static llPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
+static ullPair_t quickSortPartition(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
+static ullPair_t quickSortPartitionFast(void *array, size_t elemSize, size_t length, void* pivot, cmpFuncPtr_t cmp);
 
 void bubbleSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     for (size_t rightBoundary = length; rightBoundary > 0; rightBoundary--) {
@@ -89,7 +89,7 @@ void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     // }
 
     char *pivot = GET_ELEM(array, length / 2);
-    llPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
+    ullPair_t sep = quickSortPartition(array, length, elemSize, pivot, cmp);
 
 // array        array[length-1]
 //  |                |
@@ -101,7 +101,7 @@ void quickSort(void *array, size_t length, size_t elemSize, cmpFuncPtr_t cmp) {
     quickSort(GET_ELEM(array, sep.second), (size_t)(length - sep.second), elemSize, cmp);
 }
 
-static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
+static ullPair_t quickSortPartition(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
     swap(array, pivot, elemSize); //moving pivot element to start of the array
     // <<<<<<=====......>>>>
     //       ^    ^    ^
@@ -127,11 +127,11 @@ static llPair_t quickSortPartition(void *array, size_t length, size_t elemSize, 
     }
     MY_ASSERT(left <= GET_ELEM(array, length-1), abort());
     MY_ASSERT(head <= GET_ELEM(array, length), abort());
-    llPair_t separator = {(size_t)(left - (char*)array) / elemSize, (size_t)(head - (char*)array) / elemSize};
+    ullPair_t separator = {(size_t)(left - (char*)array) / elemSize, (size_t)(head - (char*)array) / elemSize};
     return separator;
 }
 
-static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
+static ullPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSize, void* pivot, cmpFuncPtr_t cmp) {
     char *pivotElem = (char *) calloc(1, elemSize);
     memcpy(pivotElem, pivot, elemSize);
 
@@ -148,7 +148,8 @@ static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSi
             free(pivotElem);
             MY_ASSERT(right <= GET_ELEM(array, length-1), abort());
             MY_ASSERT(right >= GET_ELEM(array, 0), abort());
-            llPair_t separator = {(size_t)(right - (char*)array) / elemSize, (size_t)(right - (char*)array) / elemSize + 1};
+            ullPair_t separator = { (size_t)(right - (char*)array) / elemSize,
+                                    (size_t)(right - (char*)array) / elemSize + 1};
             return separator;
         }
         swap(left, right, elemSize);
@@ -157,7 +158,7 @@ static llPair_t quickSortPartitionFast(void *array, size_t length, size_t elemSi
     }
     free(pivotElem);
     MY_ASSERT(0, fprintf(stderr, "Logic error in qsort partition\n"); abort(););
-    llPair_t separator = {0, 0};
+    ullPair_t separator = {0, 0};
     return separator;
 }
 

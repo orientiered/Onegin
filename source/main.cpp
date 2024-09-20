@@ -14,10 +14,10 @@
 
 
 int main(int argc, const char *argv[]) {
-// TODO: log file status time position
+// TODO: log file: status time position
 // no bufferization
     FlagsHolder_t flags = {};
-    PROPAGATE_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
+    USER_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
     if (isFlagSet(flags, "-h")) {
         printHelpMessage(flagsDescriptions);
         deleteFlags(&flags);
@@ -25,10 +25,12 @@ int main(int argc, const char *argv[]) {
     }
 
     text_t onegin = {};
-    const char *fileName = "OneginText.txt"; // TODO: get_argument_or_default
+
+    const char *fileName = "Texts/OneginText.txt"; // TODO: get_argument_or_default
     if (isFlagSet(flags, "-i"))
         fileName = getFlagValue(flags, "-i").string_;
     USER_ERROR(readTextFromFile(fileName, &onegin), deleteFlags(&flags));
+
     FILE *outFile = stdout;
     USER_ERROR(getOutputFile(flags, &outFile), {deleteFlags(&flags); deleteText(&onegin);});
 
@@ -48,6 +50,7 @@ int main(int argc, const char *argv[]) {
     writeTextToFile(onegin.originalLines, onegin.size, outFile);
 
     testSortingFunction(flags, onegin, sortFunc, cmpFuncs[0]); //only with -t flag
+
     closeAndFreeAll(&onegin, &flags, outFile);
 
     return 0;
@@ -75,11 +78,7 @@ void testSortingFunction(FlagsHolder_t flags, text_t onegin, sortFuncPtr_t sortF
 
 enum status getOutputFile(FlagsHolder_t flags, FILE **outFile) {
     if (isFlagSet(flags, "-o"))
-        *outFile = fopen(getFlagValue(flags, "-o").string_, "wb");
-    if (!*outFile) {
-        fprintf(stderr, "Can't open output file\n");
-        return ERROR;
-    }
+        USER_ERROR(openFile(outFile, getFlagValue(flags, "-o").string_, "wb"), ;);
     return SUCCESS;
 }
 

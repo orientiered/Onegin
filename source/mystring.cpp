@@ -127,13 +127,13 @@ char *strrchr(char *s, char c) {
         return NULL;
 }
 
-const char* strstr(const char* text, const char* str) {
+const char* strstrPrefix(const char* text, const char* str) {
     size_t textSize = strlen(text);
     size_t strSize =  strlen(str);
 
     if (strSize > textSize) return NULL;
 
-    int* prefix = (int*) calloc(strSize, sizeof(int)); // TODO: calloc in strstr??
+    size_t* prefix = (size_t*) calloc(strSize, sizeof(size_t)); // TODO: calloc in strstr??
     prefix[0] = 0;
     for (size_t i = 1; i < strSize; i++) {
         size_t curLen = prefix[i-1];

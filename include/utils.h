@@ -16,6 +16,11 @@ typedef struct llPair {
     long long second;
 } llPair_t;
 
+typedef struct ullPair {
+    unsigned long long first;
+    unsigned long long second;
+} ullPair_t;
+
 typedef struct voidPtrPair {
     void *first;
     void *second;

@@ -10,14 +10,26 @@
 #include "utils.h"
 #include "oneginIO.h"
 
-enum status readTextFromFile(const char* fileName, text_t *textInfo) {
-    textInfo->textLen = getFileSize(fileName);
-    DBG_PRINTF("File size: %lu\n", textInfo->textLen);
-    FILE *textFile = fopen(fileName, "rb");
-    if (!textFile) {
-        fprintf(stderr, "Can't open file\n");
+enum status openFile(FILE **file, const char *fileName, const char *mode) {
+    MY_ASSERT(file, abort());
+    MY_ASSERT(fileName, abort());
+    MY_ASSERT(mode, abort());
+
+    *file = fopen(fileName, mode);
+    if (!file) {
+        fprintf(stderr, "Can't open file %s\n", fileName);
         return ERROR;
     }
+    return SUCCESS;
+}
+
+enum status readTextFromFile(const char* fileName, text_t *textInfo) {
+    USER_ERROR(getFileSize(fileName, &textInfo->textLen), ;);
+    DBG_PRINTF("File size: %lu\n", textInfo->textLen);
+
+    FILE *textFile = NULL;
+    USER_ERROR(openFile(&textFile, fileName, "rb"), ;);
+
     char *data = (char*) calloc(textInfo->textLen + 1, sizeof(char));
     textInfo->text = data;
     DBG_PRINTF("Data pointer: %p\n", data);
@@ -100,11 +112,12 @@ void splittedStringToArray(text_t *textInfo) {
     DBG_PRINTF("Text array pointer: %p\n", textInfo->lines);
 }
 
-size_t getFileSize(const char *fileName) {
+enum status getFileSize(const char *fileName, size_t *size) {
     struct stat stBuf = {};
     if (!fileName || stat(fileName, &stBuf) == -1) {
         printf("Can't read file %s\n", fileName);
-        return 0;
+        return ERROR;
     }
-    return (size_t)stBuf.st_size;
+    *size = (size_t)stBuf.st_size;
+    return SUCCESS;
 }

@@ -5,6 +5,13 @@
 #define ONEGIN_IO_H
 
 /*!
+    @brief Open file
+
+    If file can't be opened, returns ERROR
+*/
+enum status openFile(FILE **file, const char *fileName, const char *mode);
+
+/*!
     @brief Reads strings from file
 
     @param fileName [in] Name of file
@@ -20,7 +27,7 @@ enum status readTextFromFile(const char* fileName, text_t *textInfo);
 */
 void writeTextToFile(string_t *lines, size_t size, FILE *file);
 
-size_t getFileSize(const char *fileName);
+enum status getFileSize(const char *fileName, size_t *size);
 
 void splittedStringToArray(text_t *textInfo);
 

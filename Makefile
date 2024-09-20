@@ -65,6 +65,10 @@ override CFLAGS += -I./$(INCLUDEDIR)
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
+#Easy rebuild in release mode
+RELEASE:
+	make clean
+	make BUILD=RELEASE
 
 #Automatic target to compile object files
 $(OBJS) : $(OBJDIR)/%.o : $(SRCDIR)/%.cpp

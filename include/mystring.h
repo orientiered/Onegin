@@ -18,7 +18,9 @@ int strncmp(const char *s, const char *t, size_t n);
 char *strchr(char *s, char c);
 char *strrchr(char *s, char c);
 
-const char *strstr(const char *s, const char *t );
+//uses prefix function to find string in other string in linear time
+//might be slow on short string because of calloc inside it
+const char *strstrPrefix(const char *s, const char *t );
 
 size_t strlen(const char *s);
 
