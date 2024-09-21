@@ -2,7 +2,9 @@
 #define MAIN_H
 
 static flagDescriptor_t args[] = {
+    // TODO: "%ms", maybe pointer to variable
     {TYPE_STRING,   "-i",   "--input",      "Next argument is name of input file"},
+    // {TYPE_STRING,   "-i",   "--input",      "Next argument is name of input file", "%ms", &InputName},
     {TYPE_STRING,   "-o",   "--output",     "Next argument is name of output file"},
     {TYPE_BLANK,    "-t",   "--time",       "Prints average time to sort file"},
     {TYPE_BLANK,    "-g",   "--graph",      "Plots graph if flag -t is activated"},

@@ -27,4 +27,6 @@ size_t strlen(const char *s);
 const char *findAlphabetChar(const char *str);
 const char *findAlphabetCharBackward(const char *str, const char *end);
 
+char* joinStrings(const char **strings, size_t len, const char *separator);
+
 #endif

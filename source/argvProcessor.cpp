@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 //#define DEBUG_PRINTS
+#include "mystring.h"
 #include "error_debug.h"
+#include "logger.h"
 #include "argvProcessor.h"
 #include "utils.h"
 
@@ -54,6 +55,10 @@ static enum status addFlag(FlagsHolder_t *flags, flagDescriptor desc, fVal_t val
 
 enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, const char *argv[]) {
     flags->flags = (flagVal_t*) calloc (FLAGS_RESERVED, sizeof(flagVal_t));
+    if (!flags->flags) {
+        LOG_PRINT(L_DEBUG, 0, "Memory allocation failed\n");
+        return ERROR;
+    }
     flags->reserved = FLAGS_RESERVED;
 
     for (int i = 1; i < argc;) {
@@ -70,11 +75,15 @@ enum status processArgs(FlagDescHolder_t desc, FlagsHolder_t *flags, int argc, c
 
         if (remainToScan < 0) { //remainToScan < 0 is universal error code
             deleteFlags(flags);
-            fprintf(stderr, "Wrong flags format\n");
+            logPrint(L_ZERO, 1, "Wrong flags format\n");
             return ERROR;
         }
         i  = argc - remainToScan; //moving to next arguments
     }
+
+    char *argvConcatenated = joinStrings(argv, argc, " ");
+    logPrint(L_DEBUG, 0, "%s\n", argvConcatenated);
+    free(argvConcatenated);
     return SUCCESS;
 }
 
@@ -108,7 +117,7 @@ static int scanToFlag(flagDescriptor_t desc, FlagsHolder_t *flags, int remainToS
 
     if (desc.type != TYPE_BLANK) {
         if (--remainToScan <= 0) {
-            fprintf(stderr, "Expected to get parameter for flag %s, but failed\n", desc.flagFullName);
+            logPrint(L_ZERO, 1, "Expected to get parameter for flag %s, but failed\n", desc.flagFullName);
             return remainToScan;
         }
         switch(desc.type) {

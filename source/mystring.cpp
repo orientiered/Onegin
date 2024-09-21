@@ -168,4 +168,22 @@ size_t strlen(const char *s) {
     return len;
 }
 
-
+char* joinStrings(const char **strings, size_t len, const char *separator) {
+    size_t fullLen = 0;
+    for (size_t idx = 0; idx < len; idx++)
+        fullLen += strlen(strings[idx]);
+    fullLen += strlen(separator) * (len-1);
+    fullLen += 1;
+    char *joined = (char*) calloc(fullLen, sizeof(char));
+    char *writePtr = joined;
+    for (size_t idx = 0; idx < (len - 1); idx++) {
+        for (const char *strPtr = strings[idx]; *strPtr; strPtr++)
+            *writePtr++ = *strPtr;
+        for (const char *sepPtr = separator; *sepPtr; sepPtr++)
+            *writePtr++ = *sepPtr;
+    }
+    for (const char *strPtr = strings[len-1]; *strPtr; strPtr++)
+            *writePtr++ = *strPtr;
+    *writePtr = '\0';
+    return joined;
+}

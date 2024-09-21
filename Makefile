@@ -4,7 +4,7 @@
 CMD_DEL_LINUX = rm -rf ./$(OBJDIR)/*.o ./$(OBJDIR)/*.d
 CMD_DEL_WIN   = del .\$(OBJDIR)\*.o .\$(OBJDIR)\*.d
 CMD_MKDIR_LINUX = @mkdir -p $(OBJDIR)
-CMD_MKDIR_WIN = @IF exist "$(OBJDIR)/" ( echo "" ) ELSE ( mkdir "$(OBJDIR)/" )
+CMD_MKDIR_WIN = IF not exist "$(OBJDIR)/" mkdir "$(OBJDIR)/"
 
 CFLAGS_WIN = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal -Winline -Wunreachable-code									\
 		-Wmissing-declarations -Wmissing-include-dirs -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe						\

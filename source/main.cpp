@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #define DEBUG_PRINTS
 #include "error_debug.h"
+#include "logger.h"
 #include "utils.h"
 #include "mystring.h"
 #include "argvProcessor.h"
@@ -14,25 +16,27 @@
 
 
 int main(int argc, const char *argv[]) {
-// TODO: log file: status time position
-// no bufferization
+    logOpen();
+    setLogLevel(L_ZERO);
+
     FlagsHolder_t flags = {};
-    USER_ERROR(processArgs(flagsDescriptions, &flags, argc, argv));
+    USER_ERROR(processArgs(flagsDescriptions, &flags, argc, argv), logClose());
     if (isFlagSet(flags, "-h")) {
         printHelpMessage(flagsDescriptions);
         deleteFlags(&flags);
         return 0;
     }
-
     text_t onegin = {};
 
     const char *fileName = "Texts/OneginText.txt"; // TODO: get_argument_or_default
     if (isFlagSet(flags, "-i"))
         fileName = getFlagValue(flags, "-i").string_;
-    USER_ERROR(readTextFromFile(fileName, &onegin), deleteFlags(&flags));
+    USER_ERROR(readTextFromFile(fileName, &onegin), \
+                {deleteFlags(&flags); logClose();});
 
     FILE *outFile = stdout;
-    USER_ERROR(getOutputFile(flags, &outFile), {deleteFlags(&flags); deleteText(&onegin);});
+    USER_ERROR(getOutputFile(flags, &outFile), \
+                {deleteFlags(&flags); deleteText(&onegin); logClose();});
 
     cmpFuncPtr_t cmpFuncs[] = {stringArrAlphaCmp, stringArrAlphaCmpBackwardFast};
     sortFuncPtr_t sortFunc = chooseSortFunction(getFlagValue(flags, "-s").string_); //quickSort by default
@@ -41,18 +45,18 @@ int main(int argc, const char *argv[]) {
         sortFunc(onegin.lines, onegin.size, sizeof(string_t), cmpFuncs[cmpIndex]);
         #ifndef NDEBUG
         if (checkIsSorted(onegin, cmpFuncs[cmpIndex]))
-            printf("Sort doesn't work\n");
+            logPrint(L_ZERO, 1, "Sort doesn't work\n");
         #endif
         writeTextToFile(onegin.lines, onegin.size, outFile); //forward sorting
-        DBG_PRINTF("%lu write\n", cmpIndex + 1);
+        logPrint(L_DEBUG, 0, "%lu write\n", cmpIndex + 1);
     }
 
+    // restoreOriginal(onegin)
     writeTextToFile(onegin.originalLines, onegin.size, outFile);
-
     testSortingFunction(flags, onegin, sortFunc, cmpFuncs[0]); //only with -t flag
 
     closeAndFreeAll(&onegin, &flags, outFile);
-
+    logClose();
     return 0;
 }
 

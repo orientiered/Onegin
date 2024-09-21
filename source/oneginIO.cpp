@@ -6,6 +6,7 @@
 #include "onegin.h"
 //#define DEBUG_PRINTS
 #include "error_debug.h"
+#include "logger.h"
 #include "mystring.h"
 #include "utils.h"
 #include "oneginIO.h"
@@ -17,7 +18,7 @@ enum status openFile(FILE **file, const char *fileName, const char *mode) {
 
     *file = fopen(fileName, mode);
     if (!file) {
-        fprintf(stderr, "Can't open file %s\n", fileName);
+        logPrint(L_ZERO, 1, "Can't open file %s\n", fileName);
         return ERROR;
     }
     return SUCCESS;
@@ -32,6 +33,9 @@ enum status readTextFromFile(const char* fileName, text_t *textInfo) {
 
     char *data = (char*) calloc(textInfo->textLen + 1, sizeof(char));
     textInfo->text = data;
+    // TODO: function to print error:
+    // source, function, version, custom error message
+    // -v -> verbose logs -^ for fun
     DBG_PRINTF("Data pointer: %p\n", data);
     if (!data) {
         fclose(textFile);
@@ -92,11 +96,13 @@ void splittedStringToArray(text_t *textInfo) {
     strings[0].str = textInfo->text;
 
     long long lastPos = -1; //index of last '\0' -> end of line
+    // TODO: ssize_t <- POSIX only
     for (size_t index = 0, lineIdx = 0;
          lineIdx < linesCnt && (index <= textInfo->textLen);
          index++) {
         if (textInfo->text[index] == '\0') {
             strings[lineIdx].str = textInfo->text + lastPos + 1;
+            strings[lineIdx].size = index - (lastPos + 1);
             //DBG_PRINTF("Scanned %lu line\n", lineIdx);
             lineIdx++;
             lastPos = (long long)index;
@@ -104,10 +110,14 @@ void splittedStringToArray(text_t *textInfo) {
     }
 
     textInfo->originalLines = strings;
-    for (size_t idx = 0; idx < textInfo->size; idx++)
-        textInfo->originalLines[idx].size = strlen(strings[idx].str);
+    // for (size_t idx = 0; idx < textInfo->size; idx++)
+        // textInfo->originalLines[idx].size = strlen(strings[idx].str);
+
     textInfo->lines = (string_t *) calloc(textInfo->size, sizeof(string_t));
+    //TODO: check this calloc
+    //TODO: wrapper on calloc to log memory allocations and check for leaks
     DBG_PRINTF("Lines pointers: %p %p\n", textInfo->originalLines, textInfo->lines);
+
     memcpy(textInfo->lines, textInfo->originalLines, textInfo->size * sizeof(string_t));
     DBG_PRINTF("Text array pointer: %p\n", textInfo->lines);
 }
@@ -115,7 +125,8 @@ void splittedStringToArray(text_t *textInfo) {
 enum status getFileSize(const char *fileName, size_t *size) {
     struct stat stBuf = {};
     if (!fileName || stat(fileName, &stBuf) == -1) {
-        printf("Can't read file %s\n", fileName);
+        // logPrint(L_ZERO, 1, "Can't read file %s\n", fileName);
+        logPrint(L_ZERO, 1, "Can't read file %s\n", fileName);
         return ERROR;
     }
     *size = (size_t)stBuf.st_size;

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "error_debug.h"
